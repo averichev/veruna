@@ -1,1 +1,2 @@
 Page id is <%= id %>!!!
+<div><%= header %></div>
