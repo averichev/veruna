@@ -1,33 +1,40 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest, middleware};
+use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, middleware};
 use actix_web::error::InternalError;
 use actix_web::http::StatusCode;
-use r2d2_sqlite::SqliteConnectionManager;
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel::{QueryDsl, RunQueryDsl, SqliteConnection};
 use sailfish::TemplateOnce;
+use veruna::models::Page;
 
-mod db;
-
-use db::{Pool, Queries};
-use db::Page as PageEntity;
+use veruna::schema::pages::dsl::pages;
 
 #[derive(TemplateOnce)]
 #[template(path = "page.stpl")]
-struct Page<'a> {
-    id: &'a i32,
-    header: String
+struct PageModel {
+    id: i32,
+    header: String,
 }
 
-async fn page(req: HttpRequest, db: web::Data<Pool>) -> actix_web::Result<HttpResponse> {
+fn page_by_id(connection: PooledConnection<ConnectionManager<SqliteConnection>>, id: i32) -> Page {
+    let page: Page = pages
+        .find(id)
+        .first(&connection)
+        .expect("Error loading post");
+    page
+}
+
+async fn index(req: HttpRequest, db: web::Data<Pool<ConnectionManager<SqliteConnection>>>) -> actix_web::Result<HttpResponse> {
     let id_string = req.match_info().get("id").unwrap().to_string();
-    let id = &id_string.parse::<i32>().unwrap();
+    let id = id_string.parse::<i32>().unwrap();
 
-    let pageResult = db::execute(&db, Queries::GetById).await?;
-    let page: PageEntity  = pageResult.get(0).unwrap().clone();
+    let conn = db.get().expect("couldn't get db connection from pool");
 
-    // let header  = "wdfsdf".to_string();
-    // let header  = page.header;
-    let page_model = Page{
+    let page = web::block(move || page_by_id(conn, id))
+        .await?;
+
+    let page_model = PageModel{
         id,
-        header: page.header
+        header: page.name
     };
 
     let body = page_model
@@ -39,40 +46,22 @@ async fn page(req: HttpRequest, db: web::Data<Pool>) -> actix_web::Result<HttpRe
         .body(body))
 }
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-    // connect to SQLite DB
-    let manager = SqliteConnectionManager::file("veruna.sqlite");
-    let pool = Pool::new(manager).unwrap();
+    let manager = diesel::r2d2::ConnectionManager::<SqliteConnection>::new("veruna.sqlite");
+    let pool = diesel::r2d2::Pool::new(manager).unwrap();
 
     log::info!("starting HTTP server at http://localhost:8080");
-    // start HTTP server
     HttpServer::new(move || {
         App::new()
-            // store db pool as Data object
             .app_data(web::Data::new(pool.clone()))
             .wrap(middleware::Logger::default())
             .service(
-                web::resource("/page-{id}").route(web::get().to(page)),
+                web::resource("/diesel-{id}").route(web::get().to(index)),
             )
     })
         .bind(("127.0.0.1", 8080))?
-        .workers(2)
         .run()
         .await
 }
