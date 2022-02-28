@@ -1,13 +1,15 @@
 use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, middleware};
 use actix_web::error::InternalError;
 use actix_web::http::StatusCode;
+use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
-use diesel::{QueryDsl, RunQueryDsl, SqliteConnection};
+use diesel::{OptionalExtension, QueryDsl, RunQueryDsl, SqliteConnection};
+use futures_util::TryFutureExt;
 use sailfish::TemplateOnce;
 use veruna::models::Page;
 
 use veruna::schema::pages::dsl::pages;
-
+type DbError = Box<dyn std::error::Error + Send + Sync>;
 #[derive(TemplateOnce)]
 #[template(path = "page.stpl")]
 struct PageModel {
@@ -15,35 +17,48 @@ struct PageModel {
     header: String,
 }
 
-fn page_by_id(connection: PooledConnection<ConnectionManager<SqliteConnection>>, id: i32) -> Page {
-    let page: Page = pages
-        .find(id)
+fn page_by_id(
+    connection: PooledConnection<ConnectionManager<SqliteConnection>>,
+    id_page: i32,
+)
+    -> Result<Option<Page>, DbError> {
+    use veruna::schema::pages::dsl::*;
+    let page = pages
+        .find(id_page)
         .first(&connection)
-        .expect("Error loading post");
-    page
+        .optional()?;
+    Ok(page)
 }
 
 async fn index(req: HttpRequest, db: web::Data<Pool<ConnectionManager<SqliteConnection>>>) -> actix_web::Result<HttpResponse> {
     let id_string = req.match_info().get("id").unwrap().to_string();
     let id = id_string.parse::<i32>().unwrap();
 
-    let conn = db.get().expect("couldn't get db connection from pool");
+    let page = web::block(move || {
+        let conn = db.get().expect("couldn't get db connection from pool");
+        page_by_id(conn, id)
+    })
+        .await?
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    let page = web::block(move || page_by_id(conn, id))
-        .await?;
+    if let Some(page) = page {
+        let page_model = PageModel {
+            id,
+            header: page.name,
+        };
 
-    let page_model = PageModel{
-        id,
-        header: page.name
-    };
+        let body = page_model
+            .render_once()
+            .map_err(|e| InternalError::new(e, StatusCode::INTERNAL_SERVER_ERROR))?;
 
-    let body = page_model
-        .render_once()
-        .map_err(|e| InternalError::new(e, StatusCode::INTERNAL_SERVER_ERROR))?;
-
-    Ok(HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body(body))
+        Ok(HttpResponse::Ok()
+            .content_type("text/html; charset=utf-8")
+            .body(body))
+    } else {
+        let res = HttpResponse::NotFound()
+            .body(format!("Not found with id: {}", id));
+        Ok(res)
+    }
 }
 
 #[actix_web::main]
