@@ -1,14 +1,12 @@
 use serde::Serialize;
 
-#[derive(Serialize)]
-#[derive(Queryable)]
+#[derive(Debug, Clone, Serialize, Queryable)]
 pub struct Page {
     pub id: i32,
     pub name: String
 }
 
-#[derive(Serialize)]
-#[derive(Queryable)]
+#[derive(Queryable, Serialize)]
 pub struct PageItem {
     pub id: i32,
     pub name: String,
