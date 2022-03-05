@@ -1,14 +1,15 @@
+mod controllers;
+mod repository;
+
 use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, middleware};
 use actix_web::error::InternalError;
 use actix_web::http::StatusCode;
-use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::{OptionalExtension, QueryDsl, RunQueryDsl, SqliteConnection};
-use futures_util::TryFutureExt;
 use sailfish::TemplateOnce;
 use veruna::models::Page;
+use crate::controllers::product::product_page;
 
-use veruna::schema::pages::dsl::pages;
 type DbError = Box<dyn std::error::Error + Send + Sync>;
 #[derive(TemplateOnce)]
 #[template(path = "page.stpl")]
@@ -73,7 +74,10 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .wrap(middleware::Logger::default())
             .service(
-                web::resource("/diesel-{id}").route(web::get().to(index)),
+                web::resource("/page-{id}").route(web::get().to(index)),
+            )
+            .service(
+                web::resource("/product-{id}").route(web::get().to(product_page)),
             )
     })
         .bind(("127.0.0.1", 8080))?
