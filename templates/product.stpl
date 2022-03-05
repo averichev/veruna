@@ -1,0 +1,2 @@
+Product id is <%= id %>!!!
+<div><%= name %></div>
