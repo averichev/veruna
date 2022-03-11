@@ -4,11 +4,14 @@ mod repository;
 use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, middleware};
 use actix_web::error::InternalError;
 use actix_web::http::StatusCode;
+use actix_web::middleware::NormalizePath;
+use actix_web::middleware::TrailingSlash::Trim;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::{OptionalExtension, QueryDsl, RunQueryDsl, SqliteConnection};
 use sailfish::TemplateOnce;
 use veruna::models::Page;
 use crate::controllers::product::product_page;
+use crate::controllers::path::path_test;
 
 type DbError = Box<dyn std::error::Error + Send + Sync>;
 #[derive(TemplateOnce)]
@@ -74,10 +77,16 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .wrap(middleware::Logger::default())
             .service(
-                web::resource("/page-{id}").route(web::get().to(index)),
+                web::resource("/page-{id}")
+                    .route(web::get().to(index)),
             )
             .service(
-                web::resource("/product-{id}").route(web::get().to(product_page)),
+                web::resource("/product-{id}")
+                    .route(web::get().to(product_page)),
+            )
+            .service(
+                web::resource("/{path}*")
+                    .route(web::get().to(path_test)),
             )
     })
         .bind(("127.0.0.1", 8080))?
