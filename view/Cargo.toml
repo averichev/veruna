@@ -7,4 +7,3 @@ edition = "2021"
 
 [dependencies]
 sailfish = "0.3.4"
-serde_json = "1"
