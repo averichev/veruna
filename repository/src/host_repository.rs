@@ -1,3 +1,4 @@
+use std::fmt::Error;
 use entity::host::Entity as HostEntity;
 use entity::host::Model as HostModel;
 use sea_orm::{DatabaseConnection, DbErr};
@@ -6,7 +7,8 @@ use entity::host;
 
 pub async fn find_by_name(name: &str, connection: &DatabaseConnection) -> Result<Option<HostModel>, DbErr>{
     let host = HostEntity::find()
-        .filter(host::Column::Name.eq(name))
+        .filter(host::Column::Name.contains(name))
+        .order_by_asc(host::Column::Name)
         .one(connection)
         .await;
     host
