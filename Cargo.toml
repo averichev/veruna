@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = [".", "entity", "migration", "view"]
+members = [".", "entity", "migration", "view", "repository"]
 
 [dependencies]
 actix-web = "4.0.1"
@@ -26,3 +26,4 @@ sea-orm = { version = "^0.6", features = [
 entity = { path = "entity" }
 migration = { path = "migration" }
 view = { path = "view" }
+repository = { path = "repository" }

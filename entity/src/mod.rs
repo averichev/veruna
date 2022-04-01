@@ -3,4 +3,5 @@
 pub mod prelude;
 
 pub mod product;
+pub mod host;
 pub mod node;

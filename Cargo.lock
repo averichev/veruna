@@ -1779,6 +1779,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "repository"
+version = "0.1.0"
+dependencies = [
+ "entity",
+ "sea-orm",
+]
+
+[[package]]
 name = "rust_decimal"
 version = "1.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2615,6 +2623,7 @@ dependencies = [
  "futures-util",
  "log",
  "migration",
+ "repository",
  "sailfish",
  "sea-orm",
  "serde",

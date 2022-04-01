@@ -1,0 +1,21 @@
+[package]
+name = "repository"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "repository"
+path = "src/mod.rs"
+
+[dependencies]
+entity = { path = "../entity" }
+
+[dependencies.sea-orm]
+version = "^0.6.0"
+features = [
+    "macros",
+    "debug-print",
+    "runtime-actix-native-tls",
+    "sqlx-sqlite"
+]
+default-features = false
