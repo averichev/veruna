@@ -1,3 +1,4 @@
+use std::fmt::Error;
 use entity::host_site::Entity as host_site_entity;
 use entity::host_site::Model as host_site_model;
 use sea_orm::{DatabaseConnection, DbErr};
