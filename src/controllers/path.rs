@@ -4,6 +4,7 @@ use actix_web::http::StatusCode;
 use futures_util::TryFutureExt;
 use repository::host_repository;
 use repository::host_repository::find_by_name;
+use repository::host_site_repository::find_by_host_id;
 use crate::AppState;
 
 pub async fn path_test(
@@ -24,21 +25,29 @@ pub async fn path_test(
         .filter(|v| !v.is_empty())
         .collect();
     let host = host_info.get(0).unwrap().to_string();
-    let host_model = find_by_name(&host, conn)
+    let host_model_result = find_by_name(&host, conn)
         .await;
 
-    if let Err(e) = host_model {
+    if let Err(e) = host_model_result {
         return Ok(HttpResponse::from_error(InternalError::new(
             format!("DB error {}", e.to_string()),
             StatusCode::INTERNAL_SERVER_ERROR,
         )));
     }
-    if host_model.unwrap().is_none() {
+    let host_model_option = host_model_result.unwrap();
+    if host_model_option.is_none() {
         return Ok(HttpResponse::from_error(InternalError::new(
             format!("{} not found", &host.to_string()),
             StatusCode::INTERNAL_SERVER_ERROR,
         )));
     }
+
+    let host_id = host_model_option.unwrap().id;
+    let host_site_result = find_by_host_id(
+        host_id,
+        conn
+    )
+        .await;
 
     let nodes: Vec<String> = path
         .split("/")
