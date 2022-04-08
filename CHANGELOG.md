@@ -1,0 +1,26 @@
+# 1.0.0 (2022-04-08)
+
+### Chores
+
+- .gitignore changed ([617971d](https://github.com/averichev/veruna/commit/617971db080ad077847ab3745d2e8984d0ed2ef6))
+- Sailfish template engine integration ([20ac3d5](https://github.com/averichev/veruna/commit/20ac3d5a75b407de9557d5ca6db7fc15ccdb01b9))
+
+### Improvements
+
+- 404 page ([d4ebaf9](https://github.com/averichev/veruna/commit/d4ebaf9f086c6ca46e9a2c4c8a25e7c55b3e173f))
+- Diesel integration ([40759c8](https://github.com/averichev/veruna/commit/40759c8801f64435fc2fb00aa7b4ee8e27550a29))
+- Host site relation check ([2fcf794](https://github.com/averichev/veruna/commit/2fcf794d453002ab39079d6aa966b0aa24a1b700))
+- Host site repository ([d684808](https://github.com/averichev/veruna/commit/d684808f506d26e383331c8002ae23acd553591e))
+- Product entity ([de747d0](https://github.com/averichev/veruna/commit/de747d02c2ed3a18f4d0f573619d2d33c51e3c42))
+- Repository pattern and host feature ([ce1f49d](https://github.com/averichev/veruna/commit/ce1f49d8146b49bd6c543afd843a48f8d5c74757))
+- SeaORM integration ([43fb657](https://github.com/averichev/veruna/commit/43fb6570549cbaea1b72ab5378becf916e894d5a))
+- Site check ([d939886](https://github.com/averichev/veruna/commit/d9398867bb0c4e4b94a85e1b90f97b37b0bd8886))
+- SQLite integration ([bf5dec6](https://github.com/averichev/veruna/commit/bf5dec650b5c3339256e5610ed3632649b60b798))
+- tail pattern on url ([cbcae74](https://github.com/averichev/veruna/commit/cbcae74cd99dbe07c5d13de546ebaf71661c62d4))
+- Various improvements ([befb8d4](https://github.com/averichev/veruna/commit/befb8d489acc1d8ef0fe74fde49d8186f6830792))
+
+### Other
+
+- Create main.yml ([3427105](https://github.com/averichev/veruna/commit/3427105c922c511700752883dd0905b0cb745874))
+- Create rust.yml ([5728a53](https://github.com/averichev/veruna/commit/5728a53da9710f43582f548ddb877fa94da7c9f8))
+- Initial commit ([9f710cb](https://github.com/averichev/veruna/commit/9f710cb001be53441f68007780b8064ce9b57971))
