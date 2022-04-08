@@ -42,12 +42,29 @@ pub async fn path_test(
         )));
     }
 
-    let host_id = host_model_option.unwrap().id;
+    let host_model = host_model_option.unwrap();
+    let host_id = host_model.id;
     let host_site_result = find_by_host_id(
         host_id,
         conn
     )
         .await;
+
+    if let Err(e) = host_site_result {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("DB error {}", e.to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )));
+    }
+
+    let host_site_model = host_site_result.unwrap();
+
+    if host_site_model.is_none() {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("host site relation not found {}", host_id.to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )));
+    }
 
     let nodes: Vec<String> = path
         .split("/")
