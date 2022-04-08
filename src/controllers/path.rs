@@ -5,6 +5,7 @@ use futures_util::TryFutureExt;
 use repository::host_repository;
 use repository::host_repository::find_by_name;
 use repository::host_site_repository::find_by_host_id;
+use repository::site_repository::find_site_by_id;
 use crate::AppState;
 
 pub async fn path_test(
@@ -38,7 +39,7 @@ pub async fn path_test(
     if host_model_option.is_none() {
         return Ok(HttpResponse::from_error(InternalError::new(
             format!("{} not found", &host.to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR,
+            StatusCode::NOT_FOUND,
         )));
     }
 
@@ -57,14 +58,42 @@ pub async fn path_test(
         )));
     }
 
-    let host_site_model = host_site_result.unwrap();
+    let host_site_option = host_site_result.unwrap();
 
-    if host_site_model.is_none() {
+    if host_site_option.is_none() {
         return Ok(HttpResponse::from_error(InternalError::new(
-            format!("host site relation not found {}", host_id.to_string()),
+            format!("host site relation not found by host id {}", host_id.to_string()),
+            StatusCode::NOT_FOUND,
+        )));
+    }
+
+    let host_site_model = host_site_option.unwrap();
+
+    let site_result = find_site_by_id(
+        host_site_model.site_id,
+        conn
+    )
+        .await;
+
+    if let Err(e) = site_result {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("DB error {}", e.to_string()),
             StatusCode::INTERNAL_SERVER_ERROR,
         )));
     }
+
+    let site_option = site_result.unwrap();
+
+
+
+    if site_option.is_none() {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("site not found by id {}", host_site_model.site_id),
+            StatusCode::NOT_FOUND,
+        )));
+    }
+
+    let site = site_option.unwrap();
 
     let nodes: Vec<String> = path
         .split("/")
