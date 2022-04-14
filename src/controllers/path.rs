@@ -3,6 +3,7 @@ use actix_web::error::{InternalError};
 use actix_web::http::StatusCode;
 use repository::host_repository::find_by_name;
 use repository::host_site_repository::find_by_host_id;
+use repository::node_repository::{find_node_by_code, find_node_site_relation, find_path};
 use repository::site_repository::find_site_by_id;
 use crate::AppState;
 use crate::controllers::main_page_controller::main_page_action;
@@ -109,6 +110,66 @@ pub async fn path_test(
             StatusCode::NOT_FOUND,
         )));
     }
+
+    let root_node = nodes.get(0).unwrap();
+    let root_node_result = find_node_by_code(root_node, conn)
+        .await;
+    if let Err(e) = root_node_result {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("DB error {}", e.to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )));
+    }
+    let root_node_option = root_node_result.unwrap();
+    if root_node_option.is_none() {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("root node not found by path {}", path),
+            StatusCode::NOT_FOUND,
+        )));
+    }
+
+    let root_node_model = root_node_option.unwrap();
+
+    let node_site_relation_result = find_node_site_relation(root_node_model, conn)
+        .await;
+
+    if let Err(e) = node_site_relation_result {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("DB error {}", e.to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )));
+    }
+
+    let node_site_relation_option = node_site_relation_result.unwrap();
+
+    if node_site_relation_option.is_none() {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("not found site relation for root node {}", path),
+            StatusCode::NOT_FOUND,
+        )));
+    }
+
+    let node_site_relation_model = node_site_relation_option.unwrap();
+
+    if node_site_relation_model.site_id != site.id {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("not found site for root node {}", path),
+            StatusCode::NOT_FOUND,
+        )));
+    }
+
+    let nodes_len = nodes.len();
+    let nodes_path_result = find_path(nodes, conn)
+        .await
+        .unwrap();
+
+    if nodes_path_result.len() != nodes_len {
+        return Ok(HttpResponse::from_error(InternalError::new(
+            format!("node not found {}", path),
+            StatusCode::NOT_FOUND,
+        )));
+    }
+
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(path.to_string()))
