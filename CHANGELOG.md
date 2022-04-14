@@ -1,3 +1,9 @@
+## [1.0.2](https://github.com/averichev/veruna/compare/v1.0.1...v1.0.2) (2022-04-14)
+
+### Improvements
+
+- node find ([5a4269d](https://github.com/averichev/veruna/commit/5a4269da651043d0ac9552ad8bd14af9a82621df))
+
 ## [1.0.1](https://github.com/averichev/veruna/compare/v1.0.0...v1.0.1) (2022-04-14)
 
 ### Improvements
