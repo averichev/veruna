@@ -10,19 +10,12 @@ pub struct Model {
     pub code: String,
     pub lft: i32,
     pub rgt: i32,
-    pub root: i32,
+    pub level: i32,
+    pub root: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(
-        belongs_to = "Entity",
-        from = "Column::Root",
-        to = "Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    SelfRef,
-}
+pub enum Relation {}
+
 
 impl ActiveModelBehavior for ActiveModel {}
