@@ -1,3 +1,13 @@
+## [1.0.1](https://github.com/averichev/veruna/compare/v1.0.0...v1.0.1) (2022-04-14)
+
+### Improvements
+
+- Main page of site response ([0a95cc8](https://github.com/averichev/veruna/commit/0a95cc8380575ddc996a85928f39b4683ef1acf7))
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' ([275b95d](https://github.com/averichev/veruna/commit/275b95d1f884d6a39f8fb6eec925dbf4fb169fd0))
+
 # 1.0.0 (2022-04-08)
 
 ### Chores
