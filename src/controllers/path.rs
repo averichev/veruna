@@ -1,12 +1,11 @@
 use actix_web::{Error, HttpRequest, HttpResponse, web};
 use actix_web::error::{InternalError};
 use actix_web::http::StatusCode;
-use futures_util::TryFutureExt;
-use repository::host_repository;
 use repository::host_repository::find_by_name;
 use repository::host_site_repository::find_by_host_id;
 use repository::site_repository::find_site_by_id;
 use crate::AppState;
+use crate::controllers::main_page_controller::main_page_action;
 
 pub async fn path_test(
     req: HttpRequest,
@@ -38,7 +37,7 @@ pub async fn path_test(
     let host_model_option = host_model_result.unwrap();
     if host_model_option.is_none() {
         return Ok(HttpResponse::from_error(InternalError::new(
-            format!("{} not found", &host.to_string()),
+            format!("host {} not found", &host.to_string()),
             StatusCode::NOT_FOUND,
         )));
     }
@@ -102,6 +101,9 @@ pub async fn path_test(
         .collect();
     let len = nodes.len();
     if len == 0 {
+        if path.eq("/") {
+            return main_page_action(conn, site).await;
+        }
         return Ok(HttpResponse::from_error(InternalError::new(
             format!("Path not found {}", path),
             StatusCode::NOT_FOUND,
