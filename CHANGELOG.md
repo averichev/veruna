@@ -1,3 +1,13 @@
+## [1.0.3](https://github.com/averichev/veruna/compare/v1.0.2...v1.0.3) (2022-04-18)
+
+### Code Refactoring
+
+- refactor ([f5cbbb7](https://github.com/averichev/veruna/commit/f5cbbb7bcce56bacce7401272118d6511479a674))
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' ([74f8394](https://github.com/averichev/veruna/commit/74f8394eec40ee707464843a77935b81a5d5aabd))
+
 ## [1.0.2](https://github.com/averichev/veruna/compare/v1.0.1...v1.0.2) (2022-04-14)
 
 ### Improvements
