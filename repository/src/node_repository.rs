@@ -1,4 +1,3 @@
-use std::borrow::{Borrow, BorrowMut};
 use entity::node::Entity as node_entity;
 use entity::node::Model as node_model;
 use entity::node_site::Entity as node_site_entity;
@@ -19,6 +18,16 @@ pub async fn find_node_by_code(code: &String, connection: &DatabaseConnection)
 }
 
 
+pub async fn find_node_by_id(id: i32, connection: &DatabaseConnection)
+                               -> Result<Option<node_model>, DbErr>
+{
+    let result = node_entity::find()
+        .filter(node::Column::Id.eq(id))
+        .one(connection)
+        .await;
+    result
+}
+
 pub async fn find_node_site_relation(node: node_model, connection: &DatabaseConnection)
                                      -> Result<Option<node_site_model>, DbErr>
 {
@@ -29,7 +38,7 @@ pub async fn find_node_site_relation(node: node_model, connection: &DatabaseConn
     result
 }
 
-pub async fn find_path(node: Vec<String>, connection: &DatabaseConnection)
+pub async fn find_path(node: Vec<String>, connection: &DatabaseConnection, root_id: i32)
                        -> Result<Vec<node_model>, DbErr>
 {
     let mut any_condition: Condition = Condition::any();
@@ -37,10 +46,8 @@ pub async fn find_path(node: Vec<String>, connection: &DatabaseConnection)
         let level: i32 = index as i32;
         let mut all_condition = Condition::all()
             .add(node::Column::Code.eq(e))
-            .add(node::Column::Level.eq(level));
-        if level > 0 {
-            all_condition = all_condition.add(node::Column::Root.eq(6));
-        }
+            .add(node::Column::Level.eq(level))
+            .add(node::Column::Root.eq(root_id));
         any_condition = any_condition.add(all_condition);
     }
 

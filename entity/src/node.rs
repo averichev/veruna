@@ -7,10 +7,10 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub code: String,
+    pub code: Option<String>,
     pub lft: i32,
     pub rgt: i32,
-    pub level: i32,
+    pub level: Option<i32>,
     pub root: Option<i32>,
 }
 
