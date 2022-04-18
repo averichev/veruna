@@ -1,4 +1,5 @@
 mod controllers;
+mod services;
 
 use std::env;
 use actix_web::{web, App, HttpServer, middleware, guard};
