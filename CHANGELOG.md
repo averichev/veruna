@@ -1,3 +1,9 @@
+## [1.0.4](https://github.com/averichev/veruna/compare/v1.0.3...v1.0.4) (2022-04-19)
+
+### Improvements
+
+- components on main page ([55f6524](https://github.com/averichev/veruna/commit/55f6524ef078ff80eb07e1e5b013b76f95bc6222))
+
 ## [1.0.3](https://github.com/averichev/veruna/compare/v1.0.2...v1.0.3) (2022-04-18)
 
 ### Code Refactoring
