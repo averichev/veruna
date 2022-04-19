@@ -44,7 +44,7 @@ pub async fn find_path(node: Vec<String>, connection: &DatabaseConnection, root_
     let mut any_condition: Condition = Condition::any();
     for (index, e) in node.into_iter().enumerate(){
         let level: i32 = index as i32;
-        let mut all_condition = Condition::all()
+        let all_condition = Condition::all()
             .add(node::Column::Code.eq(e))
             .add(node::Column::Level.eq(level))
             .add(node::Column::Root.eq(root_id));

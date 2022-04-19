@@ -66,7 +66,8 @@ pub async fn path_test(
             .body(path.to_string()));
     }
 
-    return main_page_action(conn, site).await;
+    return main_page_action(conn, site, node_site_relation.node_id)
+        .await;
 }
 
 
