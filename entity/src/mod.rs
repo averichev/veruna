@@ -8,3 +8,5 @@ pub mod node;
 pub mod host_site;
 pub mod site;
 pub mod node_site;
+pub mod component_node;
+pub mod component;
