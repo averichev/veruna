@@ -1,3 +1,9 @@
+## [1.0.5](https://github.com/averichev/veruna/compare/v1.0.4...v1.0.5) (2022-04-20)
+
+### Improvements
+
+- db service ([6fda3b9](https://github.com/averichev/veruna/commit/6fda3b919f8afee45961def8649d70f136b66c10))
+
 ## [1.0.4](https://github.com/averichev/veruna/compare/v1.0.3...v1.0.4) (2022-04-19)
 
 ### Improvements
