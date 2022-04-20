@@ -1,8 +1,8 @@
 use actix_web::error::InternalError;
-use actix_web::http::StatusCode;
 use sea_orm::DbConn;
 use repository::component_node_repository::find_node_components;
 use repository::component_repository::find_components_by_id;
+use crate::services::internal_db_error;
 
 pub async fn get_node_components(connection: &DbConn, node_id: i32)
                       -> Result<Vec<entity::component::Model>, InternalError<String>> {
@@ -12,10 +12,7 @@ pub async fn get_node_components(connection: &DbConn, node_id: i32)
     ).await;
 
     if let Err(e) = node_components_result {
-        return Err(InternalError::new(
-            format!("DB error {}", e.to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR,
-        ));
+        return Err(internal_db_error(e));
     }
 
     let node_components: Vec<entity::component_node::Model> = node_components_result.unwrap();
@@ -25,10 +22,7 @@ pub async fn get_node_components(connection: &DbConn, node_id: i32)
     }
     let components_result = find_components_by_id(connection, nodes_id).await;
     if let Err(e) = components_result {
-        return Err(InternalError::new(
-            format!("DB error {}", e.to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR,
-        ));
+        return Err(internal_db_error(e));
     }
     let components = components_result.unwrap();
     Ok(components)

@@ -4,6 +4,7 @@ use sea_orm::DbConn;
 use repository::host_repository::find_by_name;
 use repository::host_site_repository::find_by_host_id;
 use repository::site_repository::find_site_by_id;
+use crate::services::internal_db_error;
 
 pub async fn get_site(host: String, connection: &DbConn)
     -> Result<entity::site::Model, InternalError<String>> {
@@ -13,10 +14,7 @@ pub async fn get_site(host: String, connection: &DbConn)
     ).await;
 
     if let Err(e) = host_model_result {
-        return Err(InternalError::new(
-            format!("DB error {}", e.to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR,
-        ));
+        return Err(internal_db_error(e));
     }
     let host_model_option = host_model_result.unwrap();
     if host_model_option.is_none() {
@@ -35,10 +33,7 @@ pub async fn get_site(host: String, connection: &DbConn)
         .await;
 
     if let Err(e) = host_site_result {
-        return Err(InternalError::new(
-            format!("DB error {}", e.to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR,
-        ));
+        return Err(internal_db_error(e));
     }
 
     let host_site_option = host_site_result.unwrap();
@@ -59,10 +54,7 @@ pub async fn get_site(host: String, connection: &DbConn)
         .await;
 
     if let Err(e) = site_result {
-        return Err(InternalError::new(
-            format!("DB error {}", e.to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR,
-        ));
+        return Err(internal_db_error(e));
     }
 
     let site_option = site_result.unwrap();
