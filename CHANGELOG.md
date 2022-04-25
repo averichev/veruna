@@ -1,3 +1,13 @@
+## [1.0.7](https://github.com/averichev/veruna/compare/v1.0.6...v1.0.7) (2022-04-25)
+
+### Improvements
+
+- editorjs content rendering ([0536f75](https://github.com/averichev/veruna/commit/0536f75af8539f25075d1470f89ff7950f022de5))
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' ([3f2ff64](https://github.com/averichev/veruna/commit/3f2ff6471077c5f32bca0fb19dd6918f4ae702f5))
+
 ## [1.0.6](https://github.com/averichev/veruna/compare/v1.0.5...v1.0.6) (2022-04-21)
 
 ### Chores
