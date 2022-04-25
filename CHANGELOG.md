@@ -1,3 +1,13 @@
+## [1.0.6](https://github.com/averichev/veruna/compare/v1.0.5...v1.0.6) (2022-04-21)
+
+### Chores
+
+- components in main page - proof of concept ([6bdd078](https://github.com/averichev/veruna/commit/6bdd0789213f435893fc7cd254d4b97541c2efb1))
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' ([b56430f](https://github.com/averichev/veruna/commit/b56430f9b45cfc2932f11f82bb28ba7585821eb7))
+
 ## [1.0.5](https://github.com/averichev/veruna/compare/v1.0.4...v1.0.5) (2022-04-20)
 
 ### Improvements
