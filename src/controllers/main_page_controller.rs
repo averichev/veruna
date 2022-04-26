@@ -4,14 +4,53 @@ use actix_web::http::StatusCode;
 use entity::site::Model;
 use sea_orm::{DatabaseConnection};
 use view::models::main_page_view::MainPageView;
+use crate::services::component_service::get_node_components;
+use crate::services::db_service::{get_table_data, get_table_info};
 use sailfish::TemplateOnce;
 use view::models::component_item::ComponentItem;
-use crate::services::action_service::get_components;
 
-pub async fn main_page_action(connection: &DatabaseConnection, main_page_id: i32)
+pub async fn main_page_action(connection: &DatabaseConnection, site: Model, main_page_id: i32)
                               -> actix_web::Result<HttpResponse, Error> {
+    let components_result = get_node_components(
+        connection,
+        main_page_id,
+    ).await;
 
-    let components = get_components(connection, main_page_id).await.unwrap();
+    if let Err(e) = components_result {
+        return Ok(HttpResponse::from_error(e));
+    }
+
+    let table_info_result = get_table_info(
+        connection,
+        "article".to_string(),
+    ).await;
+
+    if let Err(e) = table_info_result {
+        return Ok(HttpResponse::from_error(e));
+    }
+
+    let table_info = table_info_result.unwrap();
+    let table_data_result = get_table_data(
+        connection,
+        "article".to_string(),
+    ).await;
+
+    if let Err(e) = table_data_result {
+        return Ok(HttpResponse::from_error(e));
+    }
+
+    let table_data = table_data_result.unwrap();
+    let mut components: Vec<ComponentItem> = Vec::new();
+    for item in &table_data.list {
+        if item.key == "content" {
+            let rendered = editorjs::render_to_html(&item.value);
+            println!("{}", rendered);
+            let component_item = ComponentItem {
+                html: rendered
+            };
+            components.push(component_item);
+        }
+    }
 
     let view = MainPageView {
         components
