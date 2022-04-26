@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = [".", "entity", "migration", "view", "repository"]
+members = [".", "entity", "migration", "view", "repository", "editorjs"]
 
 [dependencies]
 actix-web = "4.0.1"
@@ -27,3 +27,4 @@ entity = { path = "entity" }
 migration = { path = "migration" }
 view = { path = "view" }
 repository = { path = "repository" }
+editorjs = { path = "editorjs" }

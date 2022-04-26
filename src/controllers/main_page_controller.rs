@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use actix_web::{Error, HttpResponse};
 use actix_web::error::InternalError;
 use actix_web::http::StatusCode;
@@ -8,6 +7,7 @@ use view::models::main_page_view::MainPageView;
 use crate::services::component_service::get_node_components;
 use crate::services::db_service::{get_table_data, get_table_info};
 use sailfish::TemplateOnce;
+use view::models::component_item::ComponentItem;
 
 pub async fn main_page_action(connection: &DatabaseConnection, site: Model, main_page_id: i32)
                               -> actix_web::Result<HttpResponse, Error> {
@@ -40,12 +40,15 @@ pub async fn main_page_action(connection: &DatabaseConnection, site: Model, main
     }
 
     let table_data = table_data_result.unwrap();
-    let mut components = Vec::new();
-    components.push(table_data);
-
-    for component in &components {
-        for item in &component.list {
-            println!("{}: {}", item.key, item.value)
+    let mut components: Vec<ComponentItem> = Vec::new();
+    for item in &table_data.list {
+        if item.key == "content" {
+            let rendered = editorjs::render_to_html(&item.value);
+            println!("{}", rendered);
+            let component_item = ComponentItem {
+                html: rendered
+            };
+            components.push(component_item);
         }
     }
 

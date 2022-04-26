@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize};
 use crate::models::data::Data;
 use crate::models::r#type::Type;
 

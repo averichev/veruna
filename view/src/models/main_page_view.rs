@@ -1,10 +1,8 @@
-use std::collections::HashMap;
 use sailfish::TemplateOnce;
-use serde_json::{Value, Map, Number};
-use crate::models::model_list::ModelList;
+use crate::models::component_item::ComponentItem;
 
 #[derive(TemplateOnce)]
 #[template(path = "main_page.stpl")]
 pub struct MainPageView {
-    pub components: Vec<ModelList>,
+    pub components: Vec<ComponentItem>,
 }

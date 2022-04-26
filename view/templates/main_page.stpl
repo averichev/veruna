@@ -1,9 +1,6 @@
 Main page
 <div>
     <% for component in &components { %>
-    <% for item in &component.list { %>
-    <div><%= item.key %></div>
-    <div><%= item.value %></div>
-    <% } %>
+    <div><%- component.html %></div>
     <% } %>
 </div>
