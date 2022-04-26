@@ -1,14 +1,13 @@
 mod models;
 
-use std::io::{Error, ErrorKind};
 use crate::models::output::Output;
 use regex::Regex;
 use crate::models::data::Data;
 
 pub fn render_to_html(output: &String) -> String {
-    let re = Regex::new(r"((\n)|(\s{2,}))").unwrap();
-    let result = re.replace_all(output, "").to_string();
-    let deserialize_result: Output = serde_json::from_str(&result)
+    let re = Regex::new(r"(\n)").unwrap();
+    let output = re.replace_all(output, "").to_string();
+    let deserialize_result: Output = serde_json::from_str(&output)
         .expect("deserialize error");
     let blocks = deserialize_result.blocks;
     let mut html = String::new();

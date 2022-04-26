@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 use actix_web::error::InternalError;
 use sea_orm::{ConnectionTrait, DatabaseConnection, DbErr, Statement};
-use serde_json::{Value, Map, Number};
-use serde_json::map::Values;
-use view::models::model_list::ModelList;
-use view::models::model_list_item::ModelListItem;
+use crate::models::model_list::ModelList;
+use crate::models::model_list_item::ModelListItem;
 use crate::services::internal_db_error;
 
 pub async fn get_table_info(connection: &DatabaseConnection, table_name: String)
