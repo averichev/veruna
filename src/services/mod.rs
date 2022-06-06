@@ -6,6 +6,7 @@ pub mod node_site_relation_service;
 pub mod site_service;
 pub mod component_service;
 pub mod db_service;
+pub mod action_service;
 
 pub fn internal_db_error(error: DbErr) -> InternalError<String> {
     InternalError::new(
