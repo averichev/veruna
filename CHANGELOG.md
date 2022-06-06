@@ -1,3 +1,9 @@
+## [1.0.9](https://github.com/averichev/veruna/compare/v1.0.8...v1.0.9) (2022-06-06)
+
+### Improvements
+
+- components rendering in main page proof of concept ([b6572a8](https://github.com/averichev/veruna/commit/b6572a85c513d827dec04b7271e45f11c7927d28))
+
 ## [1.0.8](https://github.com/averichev/veruna/compare/v1.0.7...v1.0.8) (2022-04-26)
 
 ### Chores
