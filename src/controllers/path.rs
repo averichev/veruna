@@ -2,10 +2,13 @@ use actix_web::{Error, HttpRequest, HttpResponse, web};
 use actix_web::error::{InternalError};
 use actix_web::http::StatusCode;
 use repository::node_repository::{find_path};
+use view::models::main_page_view::{MainPageView, NodePageView};
 use crate::AppState;
 use crate::controllers::main_page_controller::main_page_action;
+use crate::services::action_service::get_components;
 use crate::services::node_site_relation_service::get_node_site_relation;
 use crate::services::site_service::get_site;
+use sailfish::TemplateOnce;
 
 pub async fn path_test(
     req: HttpRequest,
@@ -61,12 +64,27 @@ pub async fn path_test(
                 StatusCode::NOT_FOUND,
             )));
         }
-        return Ok(HttpResponse::Ok()
-            .content_type("text/html; charset=utf-8")
-            .body(path.to_string()));
+        let components = get_components(conn, main_page_id).await.unwrap();
+
+        let view = NodePageView {
+            components
+        };
+
+        let body = view
+            .render_once()
+            .map_err(|e| InternalError::new(
+                e,
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ))?;
+
+        return Ok(
+            HttpResponse::Ok()
+                .content_type("text/html; charset=utf-8")
+                .body(body)
+        );
     }
 
-    return main_page_action(conn, site, node_site_relation.node_id)
+    return main_page_action(conn, node_site_relation.node_id)
         .await;
 }
 

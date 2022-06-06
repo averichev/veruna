@@ -6,3 +6,9 @@ use crate::models::component_item::ComponentItem;
 pub struct MainPageView {
     pub components: Vec<ComponentItem>,
 }
+
+#[derive(TemplateOnce)]
+#[template(path = "node_page.stpl")]
+pub struct NodePageView {
+    pub components: Vec<ComponentItem>,
+}
