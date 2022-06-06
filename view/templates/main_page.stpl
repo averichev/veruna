@@ -1,6 +1,6 @@
 Main page
 <div>
     <% for component in &components { %>
-    <div><%- component.html %></div>
+    <h2><%- component.name %></h2>
     <% } %>
 </div>
