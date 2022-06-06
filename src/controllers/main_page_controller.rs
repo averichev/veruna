@@ -42,14 +42,21 @@ pub async fn main_page_action(connection: &DatabaseConnection, site: Model, main
     let table_data = table_data_result.unwrap();
     let mut components: Vec<ComponentItem> = Vec::new();
     for item in &table_data.list {
-        if item.key == "content" {
-            let rendered = editorjs::render_to_html(&item.value);
-            println!("{}", rendered);
-            let component_item = ComponentItem {
-                html: rendered
-            };
-            components.push(component_item);
+        let mut rendered = String::new();
+        let mut name = String::new();
+        let key = &item.key;
+        let value = &item.value;
+        if key == "content" {
+            rendered.push_str(editorjs::render_to_html(value).as_str());
         }
+        if item.key == "name" {
+            name.push_str(value.as_str());
+        }
+        let component_item = ComponentItem {
+            html: rendered,
+            name: name
+        };
+        components.push(component_item);
     }
 
     let view = MainPageView {
