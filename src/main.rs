@@ -1,51 +1,28 @@
-mod controllers;
-mod services;
-mod models;
+use std::ops::Deref;
+use veruna_kernel::sites::{site_kit, SiteBuilderImpl, SiteReadOption};
+use assert_str::assert_str_eq;
+use url::Url;
+use veruna_data::SiteRepository;
+use veruna_kernel::sites::site_kit::SiteKitFactory;
 
-use std::env;
-use actix_web::{web, App, HttpServer, middleware, guard};
-use actix_files::Files as Fs;
-use actix_web::web::Data;
-use crate::controllers::product_controller::product_page;
-use crate::controllers::path::{path_test, redirect_favicon};
-use sea_orm::DatabaseConnection;
 
-#[derive(Debug, Clone)]
-pub struct AppState {
-    conn: DatabaseConnection,
-}
+fn main() {
+    let mut site_kit = SiteKitFactory::build(SiteRepository::new());
+    let site_builder = site_kit.site_builder();
+    let site = site_builder.build();
+    let domain = site.domain();
+    assert_str_eq!("domain.com", domain);
+    let site_id = site_kit.create(site);
+    let site_id_value = site_id.value();
+    assert_eq!(site_id_value, 42);
+    let url = Url::parse("http://averichev.tech").unwrap();
+    let site = site_kit.get_site(url);
+    assert_eq!(42, site.1.value());
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-    dotenv::dotenv().ok();
-    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-    let conn = sea_orm::Database::connect(&db_url).await.unwrap();
-    let state = AppState { conn };
-    log::info!("starting HTTP server at http://localhost:20921");
-    HttpServer::new(move || {
-        App::new()
-            .app_data(Data::new(state.clone()))
-            .wrap(middleware::Logger::default())
-            .wrap(middleware::NormalizePath::default())
-            .service(
-                web::resource("/favicon.ico")
-                    .route(web::route()
-                        .guard(guard::Any(guard::Get()))
-                        .to(redirect_favicon)
-                    )
-            )
-            .service(Fs::new("/static/", "./static/"))
-            .service(
-                web::resource("/product-{id}")
-                    .route(web::get().to(product_page)),
-            )
-            .service(
-                web::resource("/{path}*")
-                    .route(web::get().to(path_test)),
-            )
-    })
-        .bind(("127.0.0.1", 20921))?
-        .run()
-        .await
+    let site_id = site_kit.site_id_builder().build(56);
+    let site_id_value = site_id.value();
+    assert_eq!(site_id_value, 56);
+
+    let reader = site_kit.reader();
+    let site = reader.read(site_id);
 }
