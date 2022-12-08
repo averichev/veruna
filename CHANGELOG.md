@@ -1,3 +1,5 @@
+## [1.0.12](https://github.com/averichev/veruna/compare/v1.0.11...v1.0.12) (2022-12-08)
+
 ## [1.0.11](https://github.com/averichev/veruna/compare/v1.0.10...v1.0.11) (2022-12-07)
 
 ### Chores
