@@ -1,1 +1,3 @@
 Main page <%-title%>
+<h1>Site: <%-site.name%></h1>
+<p>Description: <%-site.description%></p>

@@ -59,7 +59,7 @@ impl Reader for SiteReader<'_> {
 
 
 pub trait SiteBuilder {
-    fn build(&self) -> Box<dyn Site>;
+    fn build(&self, site: SiteImpl) -> Box<dyn Site>;
 }
 
 pub struct SiteBuilderImpl;
@@ -72,8 +72,7 @@ impl SiteBuilderImpl {
 }
 
 impl SiteBuilder for SiteBuilderImpl {
-    fn build(&self) -> Box<dyn Site> {
-        let site = SiteImpl { domain: "domain.com".to_string(), name: "".to_string() };
+    fn build(&self, site: SiteImpl) -> Box<dyn Site> {
         let result: Box<dyn Site> = Box::new(site);
         result
     }
@@ -86,16 +85,27 @@ pub enum SiteReadOption {
 
 pub trait Site {
     fn domain(&self) -> String;
+    fn name(&self) -> String;
+    fn description(&self) -> String;
 }
 
-struct SiteImpl {
-    domain: String,
-    name: String,
+pub struct SiteImpl {
+    pub domain: String,
+    pub name: String,
+    pub description: String,
 }
 
 impl Site for SiteImpl {
     fn domain(&self) -> String {
         self.domain.clone()
+    }
+
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn description(&self) -> String {
+        self.description.clone()
     }
 }
 

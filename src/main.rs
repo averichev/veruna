@@ -53,6 +53,10 @@ async fn path_test(request: HttpRequest,
         Some(n) => {
             let view = MainPageView {
                 title: format!("{}, {}", path, tail),
+                site: view::Site{
+                    name: n.0.name().to_string(),
+                    description: n.0.description().to_string(),
+                }
             };
             let body = view
                 .render_once()

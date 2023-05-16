@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use sea_orm::{ActiveModelTrait, Database, DatabaseConnection, DbConn, DbErr, NotSet};
 use sea_orm::ActiveValue::Set;
 use sea_orm::{entity::*, query::*};
-use veruna_domain::sites::{Site, SiteBuilder, SiteBuilderImpl, SiteId, SiteIdBuilderImpl, SiteReadOption, SiteRepository as SiteRepositoryContract};
+use veruna_domain::sites::{Site, SiteBuilder, SiteBuilderImpl, SiteId, SiteIdBuilderImpl, SiteImpl, SiteReadOption, SiteRepository as SiteRepositoryContract};
 use entity::site::{ActiveModel, Entity, Model};
 
 struct SiteRepository {
@@ -31,6 +31,7 @@ impl SiteRepositoryContract for SiteRepository {
             name: NotSet,
             domain: Set(site.domain()),
             port: NotSet,
+            description: NotSet
         };
         let result = new_site
             .save(&self.connection)
@@ -56,7 +57,7 @@ impl SiteRepositoryContract for SiteRepository {
             SiteReadOption::Domain(domain) => {
                 println!("{}", domain);
                 let site = Entity::find()
-                    .filter(<entity::prelude::Site as EntityTrait>::Column::Domain.eq(domain))
+                    .filter(<entity::prelude::Site as EntityTrait>::Column::Domain.eq(domain.clone()))
                     .one(&self.connection)
                     .await;
                 match site {
@@ -68,9 +69,12 @@ impl SiteRepositoryContract for SiteRepository {
                             Some(ss) => {
                                 let builder = SiteIdBuilderImpl::new();
                                 let site_id = builder.build(ss.id);
-                                let site_builder = SiteBuilderImpl::new();
-                                let site = site_builder.build();
-                                Some((site, site_id))
+                                let site = SiteImpl{
+                                    domain,
+                                    name: ss.name,
+                                    description: ss.description.unwrap(),
+                                };
+                                Some((Box::new(site), site_id))
                             }
                         }
                     }

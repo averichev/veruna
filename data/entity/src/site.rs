@@ -10,6 +10,7 @@ pub struct Model {
     pub name: String,
     pub domain: String,
     pub port: Option<i32>,
+    pub description: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -9,7 +9,7 @@ keywords = ["veruna"]
 repository = "https://github.com/averichev/veruna"
 
 [workspace]
-members = ["domain", "data"]
+members = ["domain", "data", "data/migration"]
 
 [dependencies]
 veruna-domain = { path = "domain" }
