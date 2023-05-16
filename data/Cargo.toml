@@ -1,0 +1,15 @@
+[package]
+name = "veruna-data"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1.59"
+sea-orm = { version = "^0", features = [
+    "sqlx-sqlite",
+    "runtime-tokio-native-tls",
+    "macros",
+    "debug-print"
+], default-features = false }
+entity = { path = "entity" }
+veruna-domain = { path = "./../domain" }

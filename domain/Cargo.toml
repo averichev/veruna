@@ -1,0 +1,9 @@
+[package]
+name = "veruna-domain"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+url = { version = "2.3.1" }
+async-trait = "0.1.59"
+log = "0.*"
