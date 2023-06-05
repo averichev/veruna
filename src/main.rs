@@ -27,21 +27,17 @@ pub struct AppState {
     repositories: Arc<dyn veruna_domain::input::Repositories>,
 }
 
-
-async fn test() -> impl Responder{
-    HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body("тест")
-}
-
 async fn path_test(request: HttpRequest,
                    app: Data<AppState>) -> impl Responder
 {
     let repo = app.repositories.site().await;
     let site_kit = SiteKitFactory::build(repo);
-    let path = request.path().to_string();
+    let uri_parser = uri::UriParser::new(&request);
+    if uri_parser.ends_with_slash() {
+
+    }
     let tail: String = request.match_info().get("tail").unwrap().parse().unwrap();
-    let url = uri::UriParser::parse(request);
+    let url = uri_parser.parse();
     let site = site_kit.get_site(url).await;
     match site {
         None => {
@@ -52,7 +48,7 @@ async fn path_test(request: HttpRequest,
         }
         Some(n) => {
             let view = MainPageView {
-                title: format!("{}, {}", path, tail),
+                title: format!("{}, {}", uri_parser.path, tail),
                 site: view::Site{
                     name: n.0.name().to_string(),
                     description: n.0.description().to_string(),

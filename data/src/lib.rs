@@ -39,7 +39,7 @@ impl SiteRepositoryContract for SiteRepository {
         let builder = SiteIdBuilderImpl::new();
         match result {
             Ok(n) => {
-                builder.build(n.id.unwrap() as u8)
+                builder.build(n.id.unwrap())
             }
             Err(e) => {
                 print!("{}", e.to_string());

@@ -16,7 +16,7 @@ pub trait CreatedSite {
 }
 
 pub trait SiteIdBuilder {
-    fn build(&self, id: u8) -> Box<dyn SiteId>;
+    fn build(&self, id: i32) -> Box<dyn SiteId>;
 }
 
 pub struct SiteIdBuilderImpl;
@@ -29,7 +29,7 @@ impl SiteIdBuilderImpl {
 }
 
 impl SiteIdBuilder for SiteIdBuilderImpl {
-    fn build(&self, id: u8) -> Box<dyn SiteId> {
+    fn build(&self, id: i32) -> Box<dyn SiteId> {
         let result = SiteIdImpl { value: id };
         let b: Box<dyn SiteId> = Box::new(result);
         b
@@ -110,15 +110,15 @@ impl Site for SiteImpl {
 }
 
 pub trait SiteId {
-    fn value(&self) -> u8;
+    fn value(&self) -> i32;
 }
 
 struct SiteIdImpl {
-    value: u8,
+    value: i32,
 }
 
 impl SiteId for SiteIdImpl {
-    fn value(&self) -> u8 {
+    fn value(&self) -> i32 {
         self.value
     }
 }
