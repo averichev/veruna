@@ -23,3 +23,16 @@ dotenv = "0.*"
 log = "0.*"
 env_logger = "0.*"
 sailfish = "0.6.0"
+casbin = "2.0.9"
+sea-orm = { version = "^0", features = [
+    "sqlx-sqlite",
+    "runtime-tokio-native-tls",
+    "macros",
+    "debug-print"
+], default-features = false }
+
+sea-orm-adapter = { version = "0.3.1", features = [
+    "sqlite",
+    "runtime-tokio-native-tls"
+], default-features = false }
+

@@ -16,13 +16,17 @@ use actix_files::Files as Fs;
 use actix_web::http::uri::Scheme;
 use actix_web::middleware::{Logger, NormalizePath, TrailingSlash};
 use dotenv;
-use veruna_data::Repositories;
+use veruna_data::{ConnectionBuilder, Repositories};
 use veruna_domain::sites::{Site, SiteId, SiteReadOption};
 use crate::view::{MainPageView, NodeView};
 use actix_web::web::Redirect;
 use sailfish::TemplateOnce;
 use actix_web::http::Uri as ActixUri;
 use veruna_domain::nodes::{Node, NodeKitFactory};
+use casbin::{CoreApi, DefaultModel, Enforcer};
+use sea_orm::Database;
+use sea_orm_adapter::SeaOrmAdapter;
+
 
 #[derive(Clone)]
 pub struct AppState {
@@ -84,6 +88,18 @@ async fn path_test(request: HttpRequest,
     }
 }
 
+async fn admin(request: HttpRequest,
+               app: Data<AppState>) -> impl Responder
+{
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body("admin page")
+}
+
+fn db_url() -> String {
+    env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file")
+}
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -91,8 +107,9 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "info");
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
-    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-    let repo = Repositories::new(db_url);
+    let builder = ConnectionBuilder::new(db_url())
+        .await;
+    let repo = Repositories::new(builder);
     let state = AppState { repositories: repo };
     log::info!("starting HTTP server at http://localhost:20921");
 
@@ -101,7 +118,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .service(
                 Fs::new("/static/", "./static/")
-                .index_file("index.html"))
+                    .index_file("index.html"))
+            .route("/admin", web::get().to(admin))
             .route("{tail:.*}", web::get().to(path_test))
             .app_data(Data::new(state.clone()))
     };

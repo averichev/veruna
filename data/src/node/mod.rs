@@ -1,19 +1,18 @@
+use std::ops::Deref;
+use std::sync::Arc;
 use async_trait::async_trait;
-use sea_orm::{Database, DbConn, DbErr};
+use sea_orm::{Database, DatabaseConnection, DbConn, DbErr};
 use entity::nodes::{Entity, Model};
 use sea_orm::{entity::*, query::*};
 use entity::prelude::Nodes;
 use veruna_domain::nodes::{Node, NodeModel, NodesRepository};
 
 pub(crate) struct NodesRepositoryImpl {
-    connection: DbConn,
+    connection: Arc<DatabaseConnection>,
 }
 
 impl NodesRepositoryImpl {
-    pub(crate) async fn new(database_url: &String) -> Box<dyn NodesRepository> {
-        let connection = Database::connect(database_url)
-            .await
-            .expect("Failed to setup the database");
+    pub(crate) async fn new(connection: Arc<DatabaseConnection>) -> Box<dyn NodesRepository> {
         let result = NodesRepositoryImpl { connection };
         Box::new(result)
     }
@@ -24,7 +23,7 @@ impl NodesRepository for NodesRepositoryImpl {
     async fn find_path(&self, path: String) -> Option<Box<dyn Node>> {
         let entity = Entity::find()
             .filter(<Nodes as EntityTrait>::Column::Path.eq(path))
-            .one(&self.connection)
+            .one(self.connection.deref())
             .await
             .unwrap();
         match entity {

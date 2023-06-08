@@ -10,17 +10,15 @@ use sea_orm::{entity::*, query::*};
 use veruna_domain::sites::{Site, SiteBuilder, SiteBuilderImpl, SiteId, SiteIdBuilderImpl, SiteImpl, SiteReadOption, SiteRepository as SiteRepositoryContract};
 use entity::site::{ActiveModel, Entity, Model};
 use veruna_domain::nodes::NodesRepository;
+use std::borrow::Borrow;
 
 struct SiteRepository {
     sites: HashMap<u8, Box<dyn Site>>,
-    connection: DbConn,
+    connection: Arc<DatabaseConnection>,
 }
 
 impl SiteRepository {
-    pub async fn new(database_url: &String) -> Box<dyn SiteRepositoryContract> {
-        let connection = Database::connect(database_url)
-            .await
-            .expect("Failed to setup the database");
+    pub async fn new(connection: Arc<DatabaseConnection>) -> Box<dyn SiteRepositoryContract> {
         let result = SiteRepository { sites: Default::default(), connection };
         Box::new(result)
     }
@@ -36,8 +34,9 @@ impl SiteRepositoryContract for SiteRepository {
             port: NotSet,
             description: NotSet,
         };
+        let conn = self.connection.deref();
         let result = new_site
-            .save(&self.connection)
+            .save(conn)
             .await;
         let builder = SiteIdBuilderImpl::new();
         match result {
@@ -61,7 +60,7 @@ impl SiteRepositoryContract for SiteRepository {
                 println!("{}", domain);
                 let site = Entity::find()
                     .filter(<entity::prelude::Site as EntityTrait>::Column::Domain.eq(domain.clone()))
-                    .one(&self.connection)
+                    .one(self.connection.deref())
                     .await;
                 match site {
                     Ok(s) => {
@@ -94,24 +93,39 @@ impl SiteRepositoryContract for SiteRepository {
     }
 }
 
+pub struct ConnectionBuilder {
+    connection: Arc<DatabaseConnection>,
+}
+
+impl ConnectionBuilder {
+    pub async fn new(database_url: String) -> ConnectionBuilder {
+        let connection = Arc::new(Database::connect(database_url)
+            .await
+            .expect("Failed to setup the database"));
+        ConnectionBuilder {
+            connection
+        }
+    }
+}
+
 pub struct Repositories {
-    database_url: String,
+    connection: Arc<DatabaseConnection>,
 }
 
 impl Repositories {
-    pub fn new(database_url: String) -> Arc<dyn veruna_domain::input::Repositories> {
-        Arc::new(Repositories { database_url })
+    pub fn new(connection_builder: ConnectionBuilder) -> Arc<dyn veruna_domain::input::Repositories> {
+        let connection = connection_builder.connection;
+        Arc::new(Repositories { connection })
     }
 }
 
 #[async_trait(? Send)]
 impl veruna_domain::input::Repositories for Repositories {
     async fn site(&self) -> Box<dyn SiteRepositoryContract> {
-        let database_url = &self.database_url;
-        SiteRepository::new(database_url).await
+        SiteRepository::new(self.connection.clone()).await
     }
 
     async fn nodes(&self) -> Box<dyn NodesRepository> {
-        node::NodesRepositoryImpl::new(&self.database_url).await
+        node::NodesRepositoryImpl::new(self.connection.clone()).await
     }
 }
