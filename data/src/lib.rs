@@ -1,3 +1,5 @@
+pub(crate) mod node;
+
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -7,6 +9,7 @@ use sea_orm::ActiveValue::Set;
 use sea_orm::{entity::*, query::*};
 use veruna_domain::sites::{Site, SiteBuilder, SiteBuilderImpl, SiteId, SiteIdBuilderImpl, SiteImpl, SiteReadOption, SiteRepository as SiteRepositoryContract};
 use entity::site::{ActiveModel, Entity, Model};
+use veruna_domain::nodes::NodesRepository;
 
 struct SiteRepository {
     sites: HashMap<u8, Box<dyn Site>>,
@@ -31,7 +34,7 @@ impl SiteRepositoryContract for SiteRepository {
             name: NotSet,
             domain: Set(site.domain()),
             port: NotSet,
-            description: NotSet
+            description: NotSet,
         };
         let result = new_site
             .save(&self.connection)
@@ -69,7 +72,7 @@ impl SiteRepositoryContract for SiteRepository {
                             Some(ss) => {
                                 let builder = SiteIdBuilderImpl::new();
                                 let site_id = builder.build(ss.id);
-                                let site = SiteImpl{
+                                let site = SiteImpl {
                                     domain,
                                     name: ss.name,
                                     description: ss.description.unwrap(),
@@ -106,5 +109,9 @@ impl veruna_domain::input::Repositories for Repositories {
     async fn site(&self) -> Box<dyn SiteRepositoryContract> {
         let database_url = &self.database_url;
         SiteRepository::new(database_url).await
+    }
+
+    async fn nodes(&self) -> Box<dyn NodesRepository> {
+        node::NodesRepositoryImpl::new(&self.database_url).await
     }
 }

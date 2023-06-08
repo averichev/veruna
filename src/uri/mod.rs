@@ -3,14 +3,14 @@ use url::{ParseError, Url};
 
 pub(crate) struct UriParser<'a> {
     request: &'a HttpRequest,
-    pub path: &'a str
+    pub path: String
 }
 
 impl UriParser<'_> {
     pub fn new(request: &HttpRequest) -> UriParser {
         UriParser {
             request,
-            path: request.path()
+            path: request.path().to_string()
         }
     }
     pub fn parse(&self) -> Result<Url, ParseError> {
