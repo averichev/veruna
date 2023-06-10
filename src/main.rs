@@ -102,6 +102,17 @@ async fn path_test(request: HttpRequest,
 async fn admin(request: HttpRequest,
                app: Data<AppState>) -> impl Responder
 {
+    let m = DefaultModel::from_file("rbac/rbac_model.conf")
+        .await
+        .unwrap();
+
+    let db = Database::connect(db_url())
+        .await
+        .unwrap();
+
+    let a = SeaOrmAdapter::new(db).await.unwrap();
+    let e = Enforcer::new(m, a).await.unwrap();
+
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body("admin page")
