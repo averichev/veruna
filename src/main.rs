@@ -24,6 +24,7 @@ use sailfish::TemplateOnce;
 use actix_web::http::Uri as ActixUri;
 use veruna_domain::nodes::{Node, NodeKitFactory};
 use casbin::{CoreApi, DefaultModel, Enforcer};
+use log::log;
 use sea_orm::Database;
 use sea_orm_adapter::SeaOrmAdapter;
 
@@ -107,9 +108,7 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "info");
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
-    let builder = ConnectionBuilder::new(db_url())
-        .await;
-    let repo = Repositories::new(builder);
+    let repo = Repositories::new(&*db_url()).await;
     let state = AppState { repositories: repo };
     log::info!("starting HTTP server at http://localhost:20921");
 

@@ -2,6 +2,8 @@ pub mod site_kit;
 
 use crate::pages::PageId;
 use async_trait::async_trait;
+use serde::Serialize;
+use serde::Deserialize;
 
 #[async_trait(? Send)]
 pub trait SiteRepository {
@@ -89,6 +91,7 @@ pub trait Site {
     fn description(&self) -> String;
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct SiteImpl {
     pub domain: String,
     pub name: String,

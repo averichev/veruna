@@ -14,7 +14,6 @@ members = ["domain", "data", "data/migration"]
 [dependencies]
 veruna-domain = { path = "domain" }
 veruna-data = { path = "data" }
-actix_trailing_slash_redirect_middleware = { path = "../actix_trailing_slash_redirect_middleware" }
 assert-str = "0.1.0"
 url = "2.3.1"
 actix-web = "4.3.1"
@@ -22,7 +21,7 @@ actix-files = "0.6.2"
 dotenv = "0.*"
 log = "0.*"
 env_logger = "0.*"
-sailfish = "0.6.0"
+sailfish = "0.7.0"
 casbin = "2.0.9"
 sea-orm = { version = "^0", features = [
     "sqlx-sqlite",
