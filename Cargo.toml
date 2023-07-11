@@ -34,4 +34,5 @@ sea-orm-adapter = { version = "0.3.1", features = [
     "sqlite",
     "runtime-tokio-native-tls"
 ], default-features = false }
+futures-util = "0.3.28"
 
