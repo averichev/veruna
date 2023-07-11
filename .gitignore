@@ -1,5 +1,4 @@
 /target
 /.idea
-/Cargo.lock
 /veruna.sqlite
 /veruna.db
