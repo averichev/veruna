@@ -35,4 +35,5 @@ sea-orm-adapter = { version = "0.3.1", features = [
     "runtime-tokio-native-tls"
 ], default-features = false }
 futures-util = "0.3.28"
+uuidv7 = "0.1.1"
 

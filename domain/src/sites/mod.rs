@@ -1,5 +1,6 @@
 pub mod site_kit;
 
+use std::sync::Arc;
 use crate::pages::PageId;
 use async_trait::async_trait;
 use serde::Serialize;
@@ -8,7 +9,7 @@ use serde::Deserialize;
 #[async_trait(? Send)]
 pub trait SiteRepository {
     async fn create(&mut self, site: Box<dyn Site>) -> Box<dyn SiteId>;
-    async fn read(&self, read_by: SiteReadOption) -> Option<(Box<dyn Site>, Box<dyn SiteId>)>;
+    async fn read(&self, read_by: SiteReadOption) -> Option<(Arc<dyn Site>, Box<dyn SiteId>)>;
     fn delete(&self, site_id: Box<dyn Site>) -> bool;
 }
 
@@ -18,7 +19,7 @@ pub trait CreatedSite {
 }
 
 pub trait SiteIdBuilder {
-    fn build(&self, id: i32) -> Box<dyn SiteId>;
+    fn build(&self, id: String) -> Box<dyn SiteId>;
 }
 
 pub struct SiteIdBuilderImpl;
@@ -31,7 +32,7 @@ impl SiteIdBuilderImpl {
 }
 
 impl SiteIdBuilder for SiteIdBuilderImpl {
-    fn build(&self, id: i32) -> Box<dyn SiteId> {
+    fn build(&self, id: String) -> Box<dyn SiteId> {
         let result = SiteIdImpl { value: id };
         let b: Box<dyn SiteId> = Box::new(result);
         b
@@ -91,7 +92,7 @@ pub trait Site {
     fn description(&self) -> String;
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct SiteImpl {
     pub domain: String,
     pub name: String,
@@ -113,16 +114,16 @@ impl Site for SiteImpl {
 }
 
 pub trait SiteId {
-    fn value(&self) -> i32;
+    fn value(&self) -> String;
 }
 
 struct SiteIdImpl {
-    value: i32,
+    value: String,
 }
 
 impl SiteId for SiteIdImpl {
-    fn value(&self) -> i32 {
-        self.value
+    fn value(&self) -> String {
+        self.value.clone()
     }
 }
 

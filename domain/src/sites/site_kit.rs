@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use async_trait::async_trait;
 use url::{ParseError, Url};
 use log;
@@ -7,7 +8,7 @@ use crate::sites::{Reader, Site, SiteBuilder, SiteBuilderImpl, SiteId, SiteIdBui
 #[async_trait(? Send)]
 pub trait SiteKit {
     async fn create(&mut self, site: Box<dyn Site>) -> Box<dyn SiteId>;
-    async fn get_site(&self, url: Result<Url, ParseError>) -> Option<(Box<dyn Site>, Box<dyn SiteId>)>;
+    async fn get_site(&self, url: Result<Url, ParseError>) -> Option<(Arc<dyn Site>, Box<dyn SiteId>)>;
     fn reader(&self) -> Box<dyn Reader + '_>;
     fn site_id_builder(&self) -> Box<dyn SiteIdBuilder>;
     fn site_builder(&self) -> Box<dyn SiteBuilder>;
@@ -24,15 +25,15 @@ impl SiteKit for SiteKitImpl {
         result
     }
 
-    async fn get_site(&self, url: Result<Url, ParseError>) -> Option<(Box<dyn Site>, Box<dyn SiteId>)> {
+    async fn get_site(&self, url: Result<Url, ParseError>) -> Option<(Arc<dyn Site>, Box<dyn SiteId>)> {
         match url {
             Ok(u) => {
                 let domain = u.host().unwrap().to_string();
                 info!("{}", domain);
-                let created_site = self.site_repository
+                let site = self.site_repository
                     .read(SiteReadOption::Domain(domain))
                     .await;
-                created_site
+                site
             }
             Err(_) => {
                 None

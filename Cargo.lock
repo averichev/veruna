@@ -4061,6 +4061,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "uuidv7"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a3d416315f815f94d52db5db92e1c07561ac8fddc08cc548904a207f0a73073"
+dependencies = [
+ "getrandom",
+]
+
+[[package]]
 name = "value-bag"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4094,6 +4103,7 @@ dependencies = [
  "sea-orm",
  "sea-orm-adapter",
  "url",
+ "uuidv7",
  "veruna-data",
  "veruna-domain",
 ]
@@ -4105,7 +4115,9 @@ dependencies = [
  "async-trait",
  "entity",
  "sea-orm",
+ "serde",
  "surrealdb",
+ "uuidv7",
  "veruna-domain",
 ]
 

@@ -43,6 +43,7 @@ pub struct Repositories {
 impl Repositories {
     pub async fn new(connection_string: &str) -> Arc<dyn veruna_domain::input::Repositories> {
         let db: Surreal<Db> = Surreal::new::<File>(connection_string).await.unwrap();
+        db.use_ns("test").use_db("test").await.unwrap();
         Arc::new(Repositories{
             connection: Arc::new(db)
         })

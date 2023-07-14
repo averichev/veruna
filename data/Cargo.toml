@@ -14,3 +14,5 @@ sea-orm = { version = "^0", features = [
 entity = { path = "entity" }
 veruna-domain = { path = "./../domain" }
 surrealdb = {version = "1.0.0-beta.9", features = ["kv-rocksdb"]}
+uuidv7 = "0.1.1"
+serde = "1.0.166"
