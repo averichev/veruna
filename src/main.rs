@@ -146,10 +146,7 @@ async fn main() -> std::io::Result<()> {
     let app_factory = move || {
         App::new()
             .wrap(Logger::default())
-            // .service(
-            //     web::scope("/static")
-            //         .route("", web::to(|| async { Redirect::to("/static/") }))
-            // )
+            .route("/static", web::to(|| async { Redirect::to("/static/") }))
             .service(
                 web::scope("/static")
                     .wrap(SayHi)
