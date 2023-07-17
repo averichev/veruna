@@ -1,14 +1,8 @@
-use std::ops::Deref;
 use std::sync::Arc;
 use async_trait::async_trait;
-use sea_orm::{Database, DatabaseConnection, DbConn, DbErr};
-use entity::nodes::{Entity, Model};
 use sea_orm::{entity::*, query::*};
-use surrealdb::engine::any::Any;
-use surrealdb::kvs::Datastore;
 use surrealdb::Surreal;
-use entity::prelude::Nodes;
-use veruna_domain::nodes::{Node, NodeModel, NodesRepository};
+use veruna_domain::nodes::{Node, NodesRepository};
 use surrealdb::engine::local::Db;
 
 pub(crate) struct NodesRepositoryImpl {

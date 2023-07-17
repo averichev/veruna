@@ -1157,6 +1157,7 @@ name = "entity"
 version = "0.1.0"
 dependencies = [
  "sea-orm",
+ "serde",
 ]
 
 [[package]]
@@ -4103,6 +4104,7 @@ dependencies = [
  "sea-orm",
  "sea-orm-adapter",
  "serde",
+ "surrealdb",
  "url",
  "uuidv7",
  "veruna-data",

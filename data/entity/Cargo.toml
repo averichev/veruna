@@ -11,3 +11,6 @@ path = "src/mod.rs"
 
 [dependencies.sea-orm]
 version = "^0"
+
+[dependencies]
+serde = "1.0.166"

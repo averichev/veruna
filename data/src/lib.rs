@@ -1,23 +1,15 @@
 pub(crate) mod node;
 pub(crate) mod site;
 
-use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::Arc;
 use async_trait::async_trait;
-use sea_orm::{ActiveModelTrait, Database, DatabaseConnection, DbConn, DbErr, NotSet};
-use sea_orm::ActiveValue::Set;
+use sea_orm::{ActiveModelTrait, Database, DatabaseConnection};
 use sea_orm::{entity::*, query::*};
-use veruna_domain::sites::{Site, SiteBuilder, SiteBuilderImpl, SiteId, SiteIdBuilderImpl, SiteImpl, SiteReadOption, SiteRepository as SiteRepositoryContract};
-use entity::site::{ActiveModel, Entity, Model};
+use veruna_domain::sites::{Site, SiteBuilder, SiteId, SiteRepository as SiteRepositoryContract};
 use veruna_domain::nodes::NodesRepository;
 use std::borrow::Borrow;
-use std::fmt::Error;
-use surrealdb::{Surreal, engine::local::File};
-use surrealdb::engine::any::{Any, connect};
-use surrealdb::kvs::Datastore;
-use surrealdb::opt::auth::Root;
-use surrealdb::sql::Thing;
+use surrealdb::Surreal;
 use surrealdb::engine::local::Db;
 use crate::site::SiteRepositoryImpl;
 
@@ -34,6 +26,7 @@ impl ConnectionBuilder {
             connection
         }
     }
+
 }
 
 pub struct Repositories {
@@ -41,11 +34,9 @@ pub struct Repositories {
 }
 
 impl Repositories {
-    pub async fn new(connection_string: &str) -> Arc<dyn veruna_domain::input::Repositories> {
-        let db: Surreal<Db> = Surreal::new::<File>(connection_string).await.unwrap();
-        db.use_ns("test").use_db("test").await.unwrap();
+    pub async fn new(connection: Arc<Surreal<Db>>) -> Arc<dyn veruna_domain::input::Repositories> {
         Arc::new(Repositories{
-            connection: Arc::new(db)
+            connection
         })
     }
 }

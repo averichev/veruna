@@ -9,7 +9,7 @@ keywords = ["veruna"]
 repository = "https://github.com/averichev/veruna"
 
 [workspace]
-members = ["domain", "data", "data/migration"]
+members = ["domain", "data", "data/migration", "data/entity"]
 
 [dependencies]
 veruna-domain = { path = "domain" }
@@ -37,3 +37,4 @@ sea-orm-adapter = { version = "0.3.1", features = [
 futures-util = "0.3.28"
 uuidv7 = "0.1.1"
 serde = "1.0.166"
+surrealdb = {version = "1.0.0-beta.9", features = ["kv-rocksdb"]}

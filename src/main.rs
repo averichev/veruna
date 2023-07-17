@@ -1,8 +1,8 @@
 mod uri;
 mod view;
 mod response;
+mod policy;
 
-use std::collections::HashMap;
 use std::env;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -31,10 +31,14 @@ use casbin::{Adapter, CoreApi, DefaultModel, Enforcer, Filter, Model};
 use log::log;
 use sea_orm::prelude::async_trait::async_trait;
 use serde::Serialize;
+use surrealdb::engine::local::{Db, File};
+use surrealdb::Surreal;
+use crate::policy::Policy;
 
 #[derive(Clone)]
 pub struct AppState {
     repositories: Arc<dyn veruna_domain::input::Repositories>,
+    connection: Arc<Surreal<Db>>,
 }
 
 async fn path_test(request: HttpRequest,
@@ -94,11 +98,23 @@ async fn path_test(request: HttpRequest,
 
 
 #[derive(Clone)]
-struct DatabaseAdapter;
+struct DatabaseAdapter {
+    connection: Arc<Surreal<Db>>,
+}
+
+impl DatabaseAdapter {
+    fn new(connection: Arc<Surreal<Db>>) -> DatabaseAdapter {
+        DatabaseAdapter { connection }
+    }
+}
 
 #[async_trait]
 impl Adapter for DatabaseAdapter {
     async fn load_policy(&self, m: &mut dyn Model) -> casbin::Result<()> {
+        let mut response = self.connection.query("SELECT * FROM policy").await.unwrap();
+        let policy = response.take::<Vec<Policy>>(0).unwrap();
+
+
         m.add_policy("p", "p", vec!["r.sub.age > 18 && r.sub.age < 60".to_string(), "/data1".to_string(), "read".to_string()]);
         m.add_policy("p", "p", vec!["r.sub.role == \"admin\" && r.sub.age < 60".to_string(), "/admin/*".to_string(), "read".to_string()]);
         Ok(())
@@ -148,7 +164,7 @@ async fn admin(request: HttpRequest,
         .await
         .unwrap();
 
-    let e = Enforcer::new(m, DatabaseAdapter).await.unwrap();
+    let e = Enforcer::new(m, DatabaseAdapter::new(app.connection.clone())).await.unwrap();
 
     #[derive(Serialize, Hash)]
     struct User {
@@ -178,8 +194,11 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "info");
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
-    let repo = Repositories::new(&*db_url()).await;
-    let state = AppState { repositories: repo };
+    let db: Surreal<Db> = Surreal::new::<File>(&*db_url()).await.unwrap();
+    db.use_ns("test").use_db("test").await.unwrap();
+    let connection = Arc::new(db);
+    let repo = Repositories::new(connection.clone()).await;
+    let state = AppState { repositories: repo, connection: connection.clone() };
     log::info!("starting HTTP server at http://localhost:20921");
 
     let app_factory = move || {

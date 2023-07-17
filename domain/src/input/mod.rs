@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::nodes::{Node, NodesRepository};
+use crate::nodes::NodesRepository;
 use crate::sites::SiteRepository;
 
 #[async_trait(? Send)]
