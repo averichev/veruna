@@ -2,42 +2,35 @@ mod uri;
 mod view;
 mod response;
 
-use std::{env, fs, future};
+use std::collections::HashMap;
+use std::env;
 use std::ops::Deref;
-use std::sync::{Arc, Mutex};
-use assert_str::assert_str_eq;
-use url::{ParseError, Url};
+use std::sync::Arc;
 use veruna_domain::sites::site_kit::SiteKitFactory;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest, Error, middleware, http};
-use actix_web::http::{StatusCode, Uri};
-use actix_web::error::{ErrorUnauthorized, InternalError};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest, Error};
+use actix_web::http::StatusCode;
+use actix_web::error::InternalError;
 use actix_web::web::Data;
 use actix_files::{Files};
-use actix_web::body::BoxBody;
-use actix_web::dev::{Response};
-use actix_web::http::header::{CONTENT_TYPE, HeaderValue, LOCATION, WWW_AUTHENTICATE};
+use actix_web::http::header::{HeaderValue, WWW_AUTHENTICATE};
 use futures_util::FutureExt;
-use actix_web::http::uri::Scheme;
-use actix_web::middleware::{Logger, NormalizePath, TrailingSlash};
+use actix_web::middleware::Logger;
 use std::future::{ready, Ready};
 use actix_web::{
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}
 };
-use actix_web::error::ParseError::Header;
 use futures_util::future::LocalBoxFuture;
 use dotenv;
-use veruna_data::{ConnectionBuilder, Repositories};
-use veruna_domain::sites::{Site, SiteId, SiteReadOption};
+use veruna_data::Repositories;
+use veruna_domain::sites::{Site, SiteId};
 use crate::view::{MainPageView, NodeView};
 use actix_web::web::Redirect;
 use sailfish::TemplateOnce;
-use actix_web::http::Uri as ActixUri;
 use veruna_domain::nodes::{Node, NodeKitFactory};
-use casbin::{CoreApi, DefaultModel, Enforcer};
+use casbin::{Adapter, CoreApi, DefaultModel, Enforcer, Filter, Model};
 use log::log;
-use sea_orm::Database;
-use sea_orm_adapter::SeaOrmAdapter;
-
+use sea_orm::prelude::async_trait::async_trait;
+use serde::Serialize;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -99,6 +92,55 @@ async fn path_test(request: HttpRequest,
     }
 }
 
+
+#[derive(Clone)]
+struct DatabaseAdapter;
+
+#[async_trait]
+impl Adapter for DatabaseAdapter {
+    async fn load_policy(&self, m: &mut dyn Model) -> casbin::Result<()> {
+        m.add_policy("p", "p", vec!["r.sub.age > 18 && r.sub.age < 60".to_string(), "/data1".to_string(), "read".to_string()]);
+        m.add_policy("p", "p", vec!["r.sub.role == \"admin\" && r.sub.age < 60".to_string(), "/admin/*".to_string(), "read".to_string()]);
+        Ok(())
+    }
+
+    async fn load_filtered_policy<'a>(&mut self, m: &mut dyn Model, f: Filter<'a>) -> casbin::Result<()> {
+        todo!()
+    }
+
+    async fn save_policy(&mut self, m: &mut dyn Model) -> casbin::Result<()> {
+        todo!()
+    }
+
+    async fn clear_policy(&mut self) -> casbin::Result<()> {
+        todo!()
+    }
+
+    fn is_filtered(&self) -> bool {
+        todo!()
+    }
+
+    async fn add_policy(&mut self, sec: &str, ptype: &str, rule: Vec<String>) -> casbin::Result<bool> {
+        Ok(true)
+    }
+
+    async fn add_policies(&mut self, sec: &str, ptype: &str, rules: Vec<Vec<String>>) -> casbin::Result<bool> {
+        todo!()
+    }
+
+    async fn remove_policy(&mut self, sec: &str, ptype: &str, rule: Vec<String>) -> casbin::Result<bool> {
+        todo!()
+    }
+
+    async fn remove_policies(&mut self, sec: &str, ptype: &str, rules: Vec<Vec<String>>) -> casbin::Result<bool> {
+        todo!()
+    }
+
+    async fn remove_filtered_policy(&mut self, sec: &str, ptype: &str, field_index: usize, field_values: Vec<String>) -> casbin::Result<bool> {
+        todo!()
+    }
+}
+
 async fn admin(request: HttpRequest,
                app: Data<AppState>) -> impl Responder
 {
@@ -106,26 +148,23 @@ async fn admin(request: HttpRequest,
         .await
         .unwrap();
 
-    let db = Database::connect(db_url())
-        .await
-        .unwrap();
+    let e = Enforcer::new(m, DatabaseAdapter).await.unwrap();
 
-    let a = SeaOrmAdapter::new(db).await.unwrap();
-    let e = Enforcer::new(m, a).await.unwrap();
+    #[derive(Serialize, Hash)]
+    struct User {
+        age: usize,
+        role: String,
+    }
 
-    HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body("admin page")
-}
+    let enforce = e.enforce((User { age: 30, role: "admin".to_string() }, "/admin/t", "read")).unwrap();
 
-async fn redirect() -> impl Responder {
-    let mut response = HttpResponse::Ok();
-    response.status(StatusCode::TEMPORARY_REDIRECT);
-    response.append_header((
-        LOCATION,
-        HeaderValue::from_static("/static/"),
-    ));
-    response
+    if enforce {
+        HttpResponse::Ok()
+            .content_type("text/html; charset=utf-8")
+            .body("admin page")
+    } else {
+        response::Forbidden::new("Доступ запрещен".to_string())
+    }
 }
 
 fn db_url() -> String {

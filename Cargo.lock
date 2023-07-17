@@ -4102,6 +4102,7 @@ dependencies = [
  "sailfish",
  "sea-orm",
  "sea-orm-adapter",
+ "serde",
  "url",
  "uuidv7",
  "veruna-data",
