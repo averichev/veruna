@@ -35,6 +35,7 @@ use serde::Serialize;
 use surrealdb::engine::local::{Db, File};
 use surrealdb::Surreal;
 use crate::policy::Policy;
+use termion::{color, style};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -190,6 +191,34 @@ fn db_url() -> String {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let instance_code = uuid7::uuid7().to_string();
+
+    println!("{}{}{}{}{}",
+             style::Bold,
+             color::Fg(color::Green),
+             instance_code,
+             style::Reset,
+             color::Fg(color::Reset)
+    );
+    let args: Vec<String> = env::args().collect();
+    match args.len() {
+        4 => {
+            match args[1].as_str() {
+                "admin" => {
+                    match args[2].as_str() {
+                        "add" => {
+                            let username = args[3].as_str();
+                            eprintln!("{}", username);
+                            return Ok(());
+                        }
+                        _ => eprintln!("Неизвестная подкоманда"),
+                    }
+                }
+                _ => eprintln!("Неизвестная команда"),
+            }
+        }
+        _ => eprintln!("Неверное количество аргументов"),
+    }
     dotenv::dotenv().ok();
     env::set_var("RUST_LOG", "info");
     env::set_var("RUST_BACKTRACE", "1");
