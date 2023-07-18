@@ -2,6 +2,7 @@ mod uri;
 mod view;
 mod response;
 mod policy;
+mod handlers;
 
 use std::env;
 use std::ops::Deref;
@@ -113,10 +114,9 @@ impl Adapter for DatabaseAdapter {
     async fn load_policy(&self, m: &mut dyn Model) -> casbin::Result<()> {
         let mut response = self.connection.query("SELECT * FROM policy").await.unwrap();
         let policy = response.take::<Vec<Policy>>(0).unwrap();
-
-
-        m.add_policy("p", "p", vec!["r.sub.age > 18 && r.sub.age < 60".to_string(), "/data1".to_string(), "read".to_string()]);
-        m.add_policy("p", "p", vec!["r.sub.role == \"admin\" && r.sub.age < 60".to_string(), "/admin/*".to_string(), "read".to_string()]);
+        for item in policy {
+            m.add_policy("p", "p", vec![item.rule, item.object, item.action]);
+        }
         Ok(())
     }
 
@@ -204,6 +204,7 @@ async fn main() -> std::io::Result<()> {
     let app_factory = move || {
         App::new()
             .wrap(Logger::default())
+            .route("/login/", web::post().to(handlers::login::handle_form_data))
             .route("/static", web::to(|| async { Redirect::to("/static/") }))
             .service(
                 web::scope("/static")

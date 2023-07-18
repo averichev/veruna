@@ -7,7 +7,7 @@ pub struct Subject {
 
 #[derive(Serialize, Hash, Deserialize)]
 pub struct Policy {
-    object: String,
-    action: String,
-    rule: String,
+    pub object: String,
+    pub action: String,
+    pub rule: String,
 }
