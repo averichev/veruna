@@ -9,6 +9,7 @@ pub mod pages;
 pub mod input;
 pub mod nodes;
 pub mod users;
+pub mod roles;
 
 #[async_trait(? Send)]
 trait DomainEntry {

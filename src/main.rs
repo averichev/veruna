@@ -33,6 +33,7 @@ use log::log;
 use sea_orm::prelude::async_trait::async_trait;
 use serde::Serialize;
 use surrealdb::engine::local::{Db, File};
+use surrealdb::opt::Strict;
 use surrealdb::Surreal;
 use crate::policy::Policy;
 use termion::{color, style};
@@ -196,7 +197,7 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "info");
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
-    let db: Surreal<Db> = Surreal::new::<File>(&*db_url()).await.unwrap();
+    let db: Surreal<Db> = Surreal::new::<File>((&*db_url(), Strict)).await.unwrap();
     db.use_ns("test").use_db("test").await.unwrap();
     let connection = Arc::new(db);
     let repo = Repositories::new(connection.clone()).await;

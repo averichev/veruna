@@ -1,6 +1,7 @@
 pub(crate) mod node;
 pub(crate) mod site;
 mod users;
+mod role;
 
 use std::ops::Deref;
 use std::sync::Arc;

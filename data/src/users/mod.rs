@@ -4,6 +4,7 @@ use serde::Deserialize;
 use surrealdb::engine::local::Db;
 use surrealdb::{Error, Surreal};
 use surrealdb::sql::Thing;
+use veruna_domain::roles::Role;
 use veruna_domain::users::{User, UsersRepository as UsersRepositoryContract};
 
 pub(crate) struct UsersRepository {
@@ -25,8 +26,8 @@ impl UsersRepository {
             .query("SELECT * FROM users WHERE username = $username")
             .bind(("username", username))
             .await?;
-        let sites: Option<User> = response.take(0)?;
-        Ok(sites.clone())
+        let user: Option<User> = response.take(0)?;
+        Ok(user)
     }
     async fn add_user(&self, username: String) -> Result<Thing, Error> {
         let record: Record = self.connection
@@ -36,6 +37,15 @@ impl UsersRepository {
             })
             .await?;
         Ok(record.id)
+    }
+    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Error>{
+        let mut response = self.connection
+            .query("SELECT ->has_roles->roles.* as roles FROM type::thing($table, $id);")
+            .bind(("table", "roles"))
+            .bind(("id", username))
+            .await?;
+        let roles: Vec<Role> = response.take(0)?;
+        Ok(roles)
     }
 }
 
@@ -50,7 +60,12 @@ impl UsersRepositoryContract for UsersRepository {
                 println!("Новый пользователь создан {}", id.to_string())
             }
             Some(n) => {
-                println!("Получаем роли {}", n.username)
+                println!("Получаем роли {}", n.username);
+                let roles = self.get_user_roles(n.username).await.unwrap();
+                println!("Роли получены:");
+                for role in roles {
+                    println!("- {}", role.name);
+                }
             }
         }
     }
