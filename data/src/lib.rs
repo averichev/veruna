@@ -1,5 +1,6 @@
 pub(crate) mod node;
 pub(crate) mod site;
+mod users;
 
 use std::ops::Deref;
 use std::sync::Arc;
@@ -12,6 +13,7 @@ use std::borrow::Borrow;
 use surrealdb::Surreal;
 use surrealdb::engine::local::Db;
 use crate::site::SiteRepositoryImpl;
+use crate::users::UsersRepository;
 
 pub struct ConnectionBuilder {
     connection: Arc<DatabaseConnection>,
@@ -49,5 +51,9 @@ impl veruna_domain::input::Repositories for Repositories {
 
     async fn nodes(&self) -> Box<dyn NodesRepository> {
         node::NodesRepositoryImpl::new(self.connection.clone()).await
+    }
+
+    async fn users(&self) -> Box<dyn veruna_domain::users::UsersRepository> {
+        UsersRepository::new(self.connection.clone())
     }
 }

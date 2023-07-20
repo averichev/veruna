@@ -41,6 +41,7 @@ use termion::{color, style};
 pub struct AppState {
     repositories: Arc<dyn veruna_domain::input::Repositories>,
     connection: Arc<Surreal<Db>>,
+    instance_code: String
 }
 
 async fn path_test(request: HttpRequest,
@@ -191,6 +192,14 @@ fn db_url() -> String {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv::dotenv().ok();
+    env::set_var("RUST_LOG", "info");
+    env::set_var("RUST_BACKTRACE", "1");
+    env_logger::init();
+    let db: Surreal<Db> = Surreal::new::<File>(&*db_url()).await.unwrap();
+    db.use_ns("test").use_db("test").await.unwrap();
+    let connection = Arc::new(db);
+    let repo = Repositories::new(connection.clone()).await;
     let instance_code = uuid7::uuid7().to_string();
 
     println!("{}{}{}{}{}",
@@ -208,26 +217,29 @@ async fn main() -> std::io::Result<()> {
                     match args[2].as_str() {
                         "add" => {
                             let username = args[3].as_str();
-                            eprintln!("{}", username);
+                            eprintln!("добавляем {}", username);
+                            let mut repo = repo.users().await;
+                            repo.create_admin(username.to_string()).await;
                             return Ok(());
                         }
-                        _ => eprintln!("Неизвестная подкоманда"),
+                        _ => {
+                            eprintln!("Неизвестная подкоманда");
+                            return Ok(());
+                        },
                     }
                 }
-                _ => eprintln!("Неизвестная команда"),
+                _ => {
+                    eprintln!("Неизвестная команда");
+                    return Ok(());
+                },
             }
         }
-        _ => eprintln!("Неверное количество аргументов"),
+        _ => {
+
+        },
     }
-    dotenv::dotenv().ok();
-    env::set_var("RUST_LOG", "info");
-    env::set_var("RUST_BACKTRACE", "1");
-    env_logger::init();
-    let db: Surreal<Db> = Surreal::new::<File>(&*db_url()).await.unwrap();
-    db.use_ns("test").use_db("test").await.unwrap();
-    let connection = Arc::new(db);
-    let repo = Repositories::new(connection.clone()).await;
-    let state = AppState { repositories: repo, connection: connection.clone() };
+
+    let state = AppState { repositories: repo, connection: connection.clone(), instance_code };
     log::info!("starting HTTP server at http://localhost:20921");
 
     let app_factory = move || {
