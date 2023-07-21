@@ -30,12 +30,10 @@ use sailfish::TemplateOnce;
 use veruna_domain::nodes::{Node, NodeKitFactory};
 use casbin::{Adapter, CoreApi, DefaultModel, Enforcer, Filter, Model};
 use log::log;
-use sea_orm::prelude::async_trait::async_trait;
 use serde::Serialize;
 use surrealdb::engine::local::{Db, File};
 use surrealdb::opt::Strict;
 use surrealdb::Surreal;
-use crate::policy::Policy;
 use termion::{color, style};
 
 #[derive(Clone)]
@@ -202,6 +200,7 @@ async fn main() -> std::io::Result<()> {
     let connection = Arc::new(db);
     let repo = Repositories::new(connection.clone()).await;
     let instance_code = uuid7::uuid7().to_string();
+    veruna_data::migration::Migration::start(connection.clone()).await;
 
     println!("{}{}{}{}{}",
              style::Bold,

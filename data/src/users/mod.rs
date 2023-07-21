@@ -62,10 +62,17 @@ impl UsersRepositoryContract for UsersRepository {
             Some(n) => {
                 println!("Получаем роли {}", n.username);
                 let roles = self.get_user_roles(n.username).await.unwrap();
-                println!("Роли получены:");
-                for role in roles {
-                    println!("- {}", role.name);
+                if roles.is_empty() {
+                    println!("Роли отсутствуют, добавляем");
+
                 }
+                else {
+                    println!("Роли получены:");
+                    for role in roles {
+                        println!("- {}", role.name);
+                    }
+                }
+
             }
         }
     }

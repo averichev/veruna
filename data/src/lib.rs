@@ -2,12 +2,11 @@ pub(crate) mod node;
 pub(crate) mod site;
 mod users;
 mod role;
+pub mod migration;
 
 use std::ops::Deref;
 use std::sync::Arc;
 use async_trait::async_trait;
-use sea_orm::{ActiveModelTrait, Database, DatabaseConnection};
-use sea_orm::{entity::*, query::*};
 use veruna_domain::sites::{Site, SiteBuilder, SiteId, SiteRepository as SiteRepositoryContract};
 use veruna_domain::nodes::NodesRepository;
 use std::borrow::Borrow;
@@ -16,21 +15,6 @@ use surrealdb::engine::local::Db;
 use crate::site::SiteRepositoryImpl;
 use crate::users::UsersRepository;
 
-pub struct ConnectionBuilder {
-    connection: Arc<DatabaseConnection>,
-}
-
-impl ConnectionBuilder {
-    pub async fn new(database_url: String) -> ConnectionBuilder {
-        let connection = Arc::new(Database::connect(database_url)
-            .await
-            .expect("Failed to setup the database"));
-        ConnectionBuilder {
-            connection
-        }
-    }
-
-}
 
 pub struct Repositories {
     connection: Arc<Surreal<Db>>,

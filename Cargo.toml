@@ -9,7 +9,7 @@ keywords = ["veruna"]
 repository = "https://github.com/averichev/veruna"
 
 [workspace]
-members = ["domain", "data", "data/migration", "data/entity"]
+members = ["domain", "data"]
 
 [dependencies]
 veruna-domain = { path = "domain" }
@@ -18,22 +18,12 @@ assert-str = "0.1.0"
 url = "2.3.1"
 actix-web = "4.3.1"
 actix-files = "0.6.2"
+async-trait = "0.1.71"
 dotenv = "0.*"
 log = "0.*"
 env_logger = "0.*"
 sailfish = "0.7.0"
 casbin = "2.0.9"
-sea-orm = { version = "^0", features = [
-    "sqlx-sqlite",
-    "runtime-tokio-native-tls",
-    "macros",
-    "debug-print"
-], default-features = false }
-
-sea-orm-adapter = { version = "0.3.1", features = [
-    "sqlite",
-    "runtime-tokio-native-tls"
-], default-features = false }
 futures-util = "0.3.28"
 uuidv7 = "0.1.1"
 serde = "1.0.166"

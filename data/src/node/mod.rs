@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use async_trait::async_trait;
-use sea_orm::{entity::*, query::*};
 use surrealdb::Surreal;
 use veruna_domain::nodes::{Node, NodesRepository};
 use surrealdb::engine::local::Db;
