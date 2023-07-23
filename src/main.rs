@@ -26,6 +26,7 @@ use veruna_data::Repositories;
 use veruna_domain::sites::{Site, SiteId};
 use crate::view::{MainPageView, NodeView};
 use actix_web::web::Redirect;
+use async_trait::async_trait;
 use sailfish::TemplateOnce;
 use veruna_domain::nodes::{Node, NodeKitFactory};
 use casbin::{Adapter, CoreApi, DefaultModel, Enforcer, Filter, Model};
@@ -35,6 +36,7 @@ use surrealdb::engine::local::{Db, File};
 use surrealdb::opt::Strict;
 use surrealdb::Surreal;
 use termion::{color, style};
+use crate::policy::Policy;
 
 #[derive(Clone)]
 pub struct AppState {
