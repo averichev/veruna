@@ -3016,7 +3016,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "veruna"
-version = "1.0.2"
+version = "1.0.3"
 dependencies = [
  "actix-files",
  "actix-web",
@@ -3028,6 +3028,7 @@ dependencies = [
  "env_logger",
  "futures-util",
  "log",
+ "regex",
  "sailfish",
  "serde",
  "surrealdb",

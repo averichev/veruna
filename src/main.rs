@@ -3,6 +3,7 @@ mod view;
 mod response;
 mod policy;
 mod handlers;
+mod middleware;
 
 use std::env;
 use std::ops::Deref;
@@ -13,7 +14,7 @@ use actix_web::http::StatusCode;
 use actix_web::error::InternalError;
 use actix_web::web::Data;
 use actix_files::{Files};
-use actix_web::http::header::{HeaderValue, WWW_AUTHENTICATE};
+use actix_web::http::header::{HeaderValue, LOCATION, WWW_AUTHENTICATE};
 use futures_util::FutureExt;
 use actix_web::middleware::Logger;
 use std::future::{ready, Ready};
@@ -31,18 +32,21 @@ use sailfish::TemplateOnce;
 use veruna_domain::nodes::{Node, NodeKitFactory};
 use casbin::{Adapter, CoreApi, DefaultModel, Enforcer, Filter, Model};
 use log::log;
+use regex::Regex;
 use serde::Serialize;
 use surrealdb::engine::local::{Db, File};
 use surrealdb::opt::Strict;
 use surrealdb::Surreal;
 use termion::{color, style};
+use crate::middleware::redirect_slash::CheckLogin;
+use crate::middleware::static_admin::SayHi;
 use crate::policy::Policy;
 
 #[derive(Clone)]
 pub struct AppState {
     repositories: Arc<dyn veruna_domain::input::Repositories>,
     connection: Arc<Surreal<Db>>,
-    instance_code: String
+    instance_code: String,
 }
 
 async fn path_test(request: HttpRequest,
@@ -180,7 +184,7 @@ async fn admin(request: HttpRequest,
     if enforce {
         HttpResponse::Ok()
             .content_type("text/html; charset=utf-8")
-            .body("admin page")
+            .body("admin api")
     } else {
         response::Forbidden::new("Доступ запрещен".to_string())
     }
@@ -214,7 +218,7 @@ async fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     match args.len() {
         4 => {
-            match args[1].as_str() {
+            return match args[1].as_str() {
                 "admin" => {
                     match args[2].as_str() {
                         "add" => {
@@ -222,23 +226,21 @@ async fn main() -> std::io::Result<()> {
                             eprintln!("добавляем {}", username);
                             let mut repo = repo.users().await;
                             repo.create_admin(username.to_string()).await;
-                            return Ok(());
+                            Ok(())
                         }
                         _ => {
                             eprintln!("Неизвестная подкоманда");
-                            return Ok(());
-                        },
+                            Ok(())
+                        }
                     }
                 }
                 _ => {
                     eprintln!("Неизвестная команда");
-                    return Ok(());
-                },
+                    Ok(())
+                }
             }
         }
-        _ => {
-
-        },
+        _ => {}
     }
 
     let state = AppState { repositories: repo, connection: connection.clone(), instance_code };
@@ -247,17 +249,17 @@ async fn main() -> std::io::Result<()> {
     let app_factory = move || {
         App::new()
             .wrap(Logger::default())
+            .wrap(CheckLogin)
             .route("/login/", web::post().to(handlers::login::handle_form_data))
-            .route("/static", web::to(|| async { Redirect::to("/static/") }))
             .service(
-                web::scope("/static")
+                web::scope("/static/admin")
                     .wrap(SayHi)
-                    .service(Files::new("/", "./static")
+                    .service(Files::new("/", "./static/admin")
                         .index_file("index.html")
                         .show_files_listing()
                     )
             )
-            .route("/admin", web::get().to(admin))
+            .route("/admin/", web::get().to(admin))
             .route("{tail:.*}", web::get().to(path_test))
             .app_data(Data::new(state.clone()))
     };
@@ -269,54 +271,3 @@ async fn main() -> std::io::Result<()> {
 }
 
 
-pub struct SayHi;
-
-impl<S, B> Transform<S, ServiceRequest> for SayHi
-    where
-        S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
-        S::Future: 'static,
-        B: 'static,
-{
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Transform = SayHiMiddleware<S>;
-    type InitError = ();
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
-
-    fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(SayHiMiddleware { service }))
-    }
-}
-
-pub struct SayHiMiddleware<S> {
-    service: S,
-}
-
-impl<S, B> Service<ServiceRequest> for SayHiMiddleware<S>
-    where
-        S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
-        S::Future: 'static,
-        B: 'static,
-{
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
-
-    forward_ready!(service);
-
-    fn call(&self, req: ServiceRequest) -> Self::Future {
-        println!("Hi from start. You requested: {}", req.path());
-        let fut = self.service.call(req);
-        Box::pin(async move {
-            let mut res: ServiceResponse<B> = fut.await?;
-            res
-                .headers_mut()
-                .insert(
-                    WWW_AUTHENTICATE,
-                    HeaderValue::from_static("Basic realm=\"Restricted\""),
-                );
-            println!("Hi from response");
-            Ok(res)
-        })
-    }
-}
