@@ -14,25 +14,20 @@ use actix_web::http::StatusCode;
 use actix_web::error::InternalError;
 use actix_web::web::Data;
 use actix_files::{Files};
-use actix_web::http::header::{HeaderValue, LOCATION, WWW_AUTHENTICATE};
 use futures_util::FutureExt;
 use actix_web::middleware::Logger;
-use std::future::{ready, Ready};
 use actix_web::{
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}
 };
-use futures_util::future::LocalBoxFuture;
 use dotenv;
 use veruna_data::Repositories;
 use veruna_domain::sites::{Site, SiteId};
 use crate::view::{MainPageView, NodeView};
-use actix_web::web::Redirect;
 use async_trait::async_trait;
 use sailfish::TemplateOnce;
 use veruna_domain::nodes::{Node, NodeKitFactory};
 use casbin::{Adapter, CoreApi, DefaultModel, Enforcer, Filter, Model};
 use log::log;
-use regex::Regex;
 use serde::Serialize;
 use surrealdb::engine::local::{Db, File};
 use surrealdb::opt::Strict;
