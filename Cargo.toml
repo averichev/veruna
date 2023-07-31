@@ -32,3 +32,7 @@ argon2 = "0.5.0"
 uuid7 = "0.6.4"
 termion = "2.0.1"
 regex = "1.9.0"
+actix-cors = "0.6.4"
+actix-web-validator = "5.0.1"
+validator = {version = "0.16.1", features = ["derive"]}
+derive_more = "0.99.17"

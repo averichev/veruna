@@ -8,8 +8,9 @@ mod middleware;
 use std::env;
 use std::ops::Deref;
 use std::sync::Arc;
+use actix_cors::Cors;
 use veruna_domain::sites::site_kit::SiteKitFactory;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest, Error};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest, Error, error};
 use actix_web::http::StatusCode;
 use actix_web::error::InternalError;
 use actix_web::web::Data;
@@ -17,8 +18,9 @@ use actix_files::{Files};
 use futures_util::FutureExt;
 use actix_web::middleware::Logger;
 use actix_web::{
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}
+    dev::{Service, Transform}
 };
+use actix_web_validator::{JsonConfig, QsQueryConfig};
 use dotenv;
 use veruna_data::Repositories;
 use veruna_domain::sites::{Site, SiteId};
@@ -33,6 +35,7 @@ use surrealdb::engine::local::{Db, File};
 use surrealdb::opt::Strict;
 use surrealdb::Surreal;
 use termion::{color, style};
+use crate::handlers::error_handler::ValidationErrorJsonPayload;
 use crate::middleware::redirect_slash::CheckLogin;
 use crate::middleware::static_admin::SayHi;
 use crate::policy::Policy;
@@ -242,7 +245,16 @@ async fn main() -> std::io::Result<()> {
     log::info!("starting HTTP server at http://localhost:20921");
 
     let app_factory = move || {
+        let cors = Cors::permissive();
         App::new()
+            .app_data(JsonConfig::default().error_handler(|err, _| {
+                let json_error = match &err {
+                    actix_web_validator::Error::Validate(error) => ValidationErrorJsonPayload::from(error),
+                    _ => ValidationErrorJsonPayload { errors: Vec::new() },
+                };
+                InternalError::from_response(err, HttpResponse::UnprocessableEntity().json(json_error)).into()
+            }))
+            .wrap(cors)
             .wrap(Logger::default())
             .wrap(CheckLogin)
             .route("/login/", web::post().to(handlers::login::handle_form_data))

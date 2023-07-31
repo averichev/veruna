@@ -1,13 +1,20 @@
-use actix_web::{HttpResponse, web};
-use serde::Deserialize;
+use std::fmt::{Display, Formatter};
+use actix_web::{HttpResponse, Responder};
+use actix_web_validator::{Json};
+use serde::{Deserialize, Serialize};
+use validator::{Validate};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub(crate) struct FormData {
-    login: String,
+    #[validate(length(min = 3, message = "Должно содержать минимум 3 символа"))]
+    username: String,
+    #[validate(length(min = 3, message = "Должно содержать минимум 3 символа"))]
     password: String,
 }
-pub(crate) async fn handle_form_data(form: web::Form<FormData>) -> HttpResponse {
-    let field1_value = &form.login;
-    let field2_value = &form.password;
-    HttpResponse::Ok().body(format!("Received form data: {} - {}", field1_value, field2_value))
+
+pub(crate) async fn handle_form_data(form: Json<FormData>) -> impl Responder {
+    HttpResponse::Ok().body(format!("Received form data: {} - {}",
+                                    form.username,
+                                    form.password
+    ))
 }
