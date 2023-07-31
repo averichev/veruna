@@ -1,7 +1,7 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::Display;
 use actix_web::{HttpResponse, Responder};
 use actix_web_validator::{Json};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use validator::{Validate};
 
 #[derive(Deserialize, Validate)]
