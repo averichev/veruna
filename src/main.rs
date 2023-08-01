@@ -4,13 +4,14 @@ mod response;
 mod policy;
 mod handlers;
 mod middleware;
+mod errors;
 
 use std::env;
 use std::ops::Deref;
 use std::sync::Arc;
 use actix_cors::Cors;
 use veruna_domain::sites::site_kit::SiteKitFactory;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest, Error, error};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest};
 use actix_web::http::StatusCode;
 use actix_web::error::InternalError;
 use actix_web::web::Data;
@@ -236,7 +237,7 @@ async fn main() -> std::io::Result<()> {
                     eprintln!("Неизвестная команда");
                     Ok(())
                 }
-            }
+            };
         }
         _ => {}
     }
@@ -258,6 +259,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(CheckLogin)
             .route("/login/", web::post().to(handlers::login::handle_form_data))
+            .route("/register/", web::post().to(handlers::register::register_action))
             .service(
                 web::scope("/static/admin")
                     .wrap(SayHi)

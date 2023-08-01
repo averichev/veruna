@@ -4,8 +4,10 @@ use serde::Deserialize;
 use surrealdb::engine::local::Db;
 use surrealdb::{Error, Surreal};
 use surrealdb::sql::Thing;
+use veruna_domain::DataError;
 use veruna_domain::roles::Role;
-use veruna_domain::users::{User, UsersRepository as UsersRepositoryContract};
+use veruna_domain::users::{AddUser, RegisterUser, User, UsersRepository as UsersRepositoryContract};
+use veruna_domain::users::user_id::UserId;
 
 pub(crate) struct UsersRepository {
     connection: Arc<Surreal<Db>>,
@@ -14,7 +16,13 @@ pub(crate) struct UsersRepository {
 #[derive(Debug, Deserialize)]
 struct Record {
     #[allow(dead_code)]
-    id: Thing,
+    thing: Thing,
+}
+#[derive(Debug, Deserialize)]
+struct UserEntity {
+    #[serde(rename(deserialize = "id"))]
+    thing: Thing,
+    username: String,
 }
 
 impl UsersRepository {
@@ -26,19 +34,31 @@ impl UsersRepository {
             .query("SELECT * FROM users WHERE username = $username")
             .bind(("username", username))
             .await?;
-        let user: Option<User> = response.take(0)?;
-        Ok(user)
+        let user: Option<UserEntity> = response.take(0)?;
+        match user {
+            None => {
+                Ok(None)
+            }
+            Some(user_entity) => {
+                Ok(Some(User
+                {
+                    id: user_entity.thing.id.to_string(),
+                    username: user_entity.username,
+                })
+                )
+            }
+        }
     }
     async fn add_user(&self, username: String) -> Result<Thing, Error> {
         let record: Record = self.connection
             .create("users")
-            .content(User {
+            .content(AddUser {
                 username,
             })
             .await?;
-        Ok(record.id)
+        Ok(record.thing)
     }
-    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Error>{
+    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Error> {
         let mut response = self.connection
             .query("SELECT ->has_roles->roles.* as roles FROM type::thing($table, $id);")
             .bind(("table", "roles"))
@@ -49,7 +69,7 @@ impl UsersRepository {
     }
 }
 
-#[async_trait]
+#[async_trait(? Send)]
 impl UsersRepositoryContract for UsersRepository {
     async fn create_admin(&mut self, username: String) {
         let user = self.find_user_by_username(username.clone()).await.unwrap();
@@ -64,15 +84,36 @@ impl UsersRepositoryContract for UsersRepository {
                 let roles = self.get_user_roles(n.username).await.unwrap();
                 if roles.is_empty() {
                     println!("Роли отсутствуют, добавляем");
-
-                }
-                else {
+                } else {
                     println!("Роли получены:");
                     for role in roles {
                         println!("- {}", role.name);
                     }
                 }
+            }
+        }
+    }
 
+    async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DataError>> {
+        let record: Record = self.connection
+            .create("users")
+            .content(RegisterUser {
+                username,
+                password,
+            })
+            .await
+            .unwrap();
+        Ok(UserId { value: record.thing.id.to_string()})
+    }
+
+    async fn find_user_id_by_username(&mut self, username: String) -> Option<UserId> {
+        let user = self.find_user_by_username(username).await.unwrap();
+        match user {
+            None => {
+                None
+            }
+            Some(user) => {
+                Some(UserId { value: user.id })
             }
         }
     }

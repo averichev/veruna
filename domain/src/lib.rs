@@ -29,3 +29,11 @@ impl DomainEntry for Entry {
         site_kit
     }
 }
+
+trait DomainError {
+    fn message(self) -> String;
+}
+
+pub trait DataError {
+    fn message(&self) -> String;
+}
