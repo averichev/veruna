@@ -38,7 +38,7 @@ impl veruna_domain::input::Repositories for Repositories {
         node::NodesRepositoryImpl::new(self.connection.clone()).await
     }
 
-    async fn users(&self) -> Box<dyn veruna_domain::users::UsersRepository> {
+    fn users(&self) -> Box<dyn veruna_domain::users::UsersRepository> {
         UsersRepository::new(self.connection.clone())
     }
 }

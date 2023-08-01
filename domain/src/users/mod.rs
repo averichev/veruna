@@ -4,16 +4,19 @@ pub mod register_user_error;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use crate::{DataError, DomainError};
+use crate::roles::Role;
 use crate::users::register_user_error::RegisterUserError;
 use crate::users::user_id::UserId;
 
-#[async_trait]
+#[async_trait(? Send)]
 pub trait UsersRepository {
-    async fn create_admin(&mut self, username: String);
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DataError>>;
     async fn find_user_id_by_username(&mut self, username: String) -> Option<UserId>;
     async fn count_users(&mut self) -> u32;
     async fn add_user_role(&mut self, username: String, role: String);
+    async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataError>>;
+    async fn add_user(&self, username: String) -> Result<UserId, Box<dyn DataError>>;
+    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataError>>;
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -37,6 +40,7 @@ pub struct RegisterUser {
 #[async_trait(? Send)]
 pub trait UserKitContract {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>>;
+    async fn create_admin(&mut self, username: String);
 }
 
 pub(crate) struct UserKit {
@@ -62,7 +66,7 @@ impl UserKitContract for UserKit {
                 let count_users: u32 = self.repository.count_users().await;
                 println!("create admin because 1 user only");
                 if count_users == 1u32 {
-                    self.repository.create_admin(username).await;
+                    self.create_admin(username).await;
                 }
                 Ok(user_id)
             }
@@ -71,6 +75,29 @@ impl UserKitContract for UserKit {
                 Err(Box::new(RegisterUserError {
                     message: data_error.message(),
                 }))
+            }
+        }
+    }
+    async fn create_admin(&mut self, username: String) {
+        println!("create_admin");
+        let user = self.repository.find_user_by_username(username.clone()).await.unwrap();
+        match user {
+            None => {
+                println!("Добавляем {} в базу", username);
+                let id = self.repository.add_user(username).await.unwrap();
+                println!("Новый пользователь создан {}", id.value)
+            }
+            Some(n) => {
+                println!("Получаем роли {}", n.username);
+                let roles = self.repository.get_user_roles(n.username).await.unwrap();
+                if roles.is_empty() {
+                    println!("Роли отсутствуют, добавляем");
+                } else {
+                    println!("Роли получены:");
+                    for role in roles {
+                        println!("- {}", role.name);
+                    }
+                }
             }
         }
     }

@@ -203,11 +203,12 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
     let db: Surreal<Db> = Surreal::new::<File>((&*db_url(), Strict)).await.unwrap();
-    db.use_ns("test").use_db("test").await.unwrap();
+    db.use_ns("veruna").use_db("veruna").await.unwrap();
     let connection = Arc::new(db);
+    veruna_data::migration::Migration::start(&connection).await;
     let repo = Repositories::new(connection.clone());
     let instance_code = uuid7::uuid7().to_string();
-    veruna_data::migration::Migration::start(connection.clone()).await;
+    let domain = DomainEntry::new(repo.clone());
 
     println!("{}{}{}{}{}",
              style::Bold,
@@ -225,8 +226,7 @@ async fn main() -> std::io::Result<()> {
                         "add" => {
                             let username = args[3].as_str();
                             eprintln!("добавляем {}", username);
-                            let mut repo = repo.users().await;
-                            repo.create_admin(username.to_string()).await;
+                            domain.user_kit().create_admin(username.to_string()).await;
                             Ok(())
                         }
                         _ => {
@@ -243,8 +243,6 @@ async fn main() -> std::io::Result<()> {
         }
         _ => {}
     }
-
-    let domain = DomainEntry::new(repo.clone());
 
     let state = AppState {
         repositories: repo.clone(),

@@ -4,7 +4,6 @@ use actix_web::web::Data;
 use actix_web_validator::{Json};
 use serde::Deserialize;
 use validator::{Validate};
-use veruna_domain::DataError;
 use crate::AppState;
 use crate::errors::InternalServerError;
 
@@ -21,11 +20,11 @@ pub(crate) struct RegisterForm {
 }
 
 pub(crate) async fn register_action(form: Json<RegisterForm>, app: Data<AppState>) -> impl Responder {
-    let mut repository = app.repositories.users().await;
+    let mut repository = app.repositories.users();
     let user_id_option = repository
         .find_user_id_by_username(form.username.clone())
         .await;
-    let mut kit = app.domain.user_kit().await;
+    let mut kit = app.domain.user_kit();
     match user_id_option {
         None => {
             println!("user_id_option none");

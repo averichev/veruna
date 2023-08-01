@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use std::fmt;
 use std::sync::Arc;
 use async_trait::async_trait;
 use crate::input::Repositories;
@@ -16,7 +17,7 @@ pub mod roles;
 #[async_trait(? Send)]
 pub trait DomainEntryTrait: Send + Sync {
     async fn site_kit(&self) -> Box<dyn SiteKit>;
-    async fn user_kit(&self) -> Box<dyn UserKitContract>;
+    fn user_kit(&self) -> Box<dyn UserKitContract>;
 }
 
 pub struct DomainEntry {
@@ -38,17 +39,17 @@ impl DomainEntryTrait for DomainEntry {
         site_kit
     }
 
-    async fn user_kit(&self) -> Box<dyn UserKitContract> {
+    fn user_kit(&self) -> Box<dyn UserKitContract> {
         let repositories = &self.repositories;
-        let repository = repositories.users().await;
+        let repository = repositories.users();
         Box::new(UserKit { repository })
     }
 }
 
-pub trait DomainError {
+pub trait DomainError: fmt::Debug {
     fn message(&self) -> String;
 }
 
-pub trait DataError {
+pub trait DataError: fmt::Debug  {
     fn message(&self) -> String;
 }

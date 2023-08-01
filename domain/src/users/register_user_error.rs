@@ -1,6 +1,6 @@
 use crate::DomainError;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RegisterUserError {
     pub(crate) message: String,
 }

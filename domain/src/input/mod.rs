@@ -7,5 +7,5 @@ use crate::users::UsersRepository;
 pub trait Repositories : Send + Sync {
     async fn site(&self) -> Box<dyn SiteRepository>;
     async fn nodes(&self) -> Box<dyn NodesRepository>;
-    async fn users(&self) -> Box<dyn UsersRepository>;
+    fn users(&self) -> Box<dyn UsersRepository>;
 }
