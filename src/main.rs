@@ -203,11 +203,11 @@ async fn main() -> std::io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
     let db: Surreal<Db> = Surreal::new::<File>((&*db_url(), Strict)).await.unwrap();
-    db.use_ns("test").use_db("test").await.unwrap();
+    db.use_ns("veruna").use_db("veruna").await.unwrap();
     let connection = Arc::new(db);
+    veruna_data::migration::Migration::start(&connection).await;
     let repo = Repositories::new(connection.clone());
     let instance_code = uuid7::uuid7().to_string();
-    veruna_data::migration::Migration::start(connection.clone()).await;
 
     println!("{}{}{}{}{}",
              style::Bold,

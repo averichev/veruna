@@ -29,72 +29,11 @@ impl UsersRepository {
     pub fn new(connection: Arc<Surreal<Db>>) -> Box<dyn UsersRepositoryContract> {
         Box::new(UsersRepository { connection })
     }
-    async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Error> {
-        let mut response = self.connection
-            .query("SELECT * FROM users WHERE username = $username")
-            .bind(("username", username))
-            .await?;
-        let user: Option<UserEntity> = response.take(0)?;
-        match user {
-            None => {
-                Ok(None)
-            }
-            Some(user_entity) => {
-                Ok(Some(User
-                {
-                    id: user_entity.thing.id.to_string(),
-                    username: user_entity.username,
-                })
-                )
-            }
-        }
-    }
-    async fn add_user(&self, username: String) -> Result<Thing, Error> {
-        let record: Record = self.connection
-            .create("users")
-            .content(AddUser {
-                username,
-            })
-            .await?;
-        Ok(record.thing)
-    }
-    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Error> {
-        let mut response = self.connection
-            .query("SELECT ->has_roles->roles.* as roles FROM type::thing($table, $id);")
-            .bind(("table", "roles"))
-            .bind(("id", username))
-            .await?;
-        let roles: Vec<Role> = response.take(0)?;
-        Ok(roles)
-    }
+
 }
 
 #[async_trait]
 impl UsersRepositoryContract for UsersRepository {
-    async fn create_admin(&mut self, username: String) {
-        println!("create_admin");
-        let user = self.find_user_by_username(username.clone()).await.unwrap();
-        match user {
-            None => {
-                println!("Добавляем {} в базу", username);
-                let id = self.add_user(username).await.unwrap();
-                println!("Новый пользователь создан {}", id.to_string())
-            }
-            Some(n) => {
-                println!("Получаем роли {}", n.username);
-                let roles = self.get_user_roles(n.username).await.unwrap();
-                if roles.is_empty() {
-                    println!("Роли отсутствуют, добавляем");
-                } else {
-                    println!("Роли получены:");
-                    for role in roles {
-                        println!("- {}", role.name);
-                    }
-                }
-            }
-        }
-    }
-
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DataError>> {
         let record: UserEntity = self.connection
             .create("users")
@@ -137,5 +76,44 @@ impl UsersRepositoryContract for UsersRepository {
 
     async fn add_user_role(&mut self, username: String, role: String) {
         todo!()
+    }
+    async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Error> {
+        let mut response = self.connection
+            .query("SELECT * FROM users WHERE username = $username")
+            .bind(("username", username))
+            .await?;
+        let user: Option<UserEntity> = response.take(0)?;
+        match user {
+            None => {
+                Ok(None)
+            }
+            Some(user_entity) => {
+                Ok(Some(User
+                {
+                    id: user_entity.thing.id.to_string(),
+                    username: user_entity.username,
+                })
+                )
+            }
+        }
+    }
+
+    async fn add_user(&self, username: String) -> Result<Thing, Error> {
+        let record: Record = self.connection
+            .create("users")
+            .content(AddUser {
+                username,
+            })
+            .await?;
+        Ok(record.thing)
+    }
+    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Error> {
+        let mut response = self.connection
+            .query("SELECT ->has_roles->roles.* as roles FROM type::thing($table, $id);")
+            .bind(("table", "roles"))
+            .bind(("id", username))
+            .await?;
+        let roles: Vec<Role> = response.take(0)?;
+        Ok(roles)
     }
 }

@@ -5,8 +5,14 @@ use surrealdb::Surreal;
 pub struct Migration;
 
 impl Migration {
-    pub async fn start(connection: Arc<Surreal<Db>>) {
+    pub async fn start(connection: &Arc<Surreal<Db>>) {
         connection
+            .query("
+                define ns veruna;
+                define db veruna;
+                use ns veruna;
+                use db veruna;
+            ")
             .query("
                 DEFINE TABLE policy SCHEMAFULL;
                 DEFINE FIELD rule ON TABLE policy TYPE string;

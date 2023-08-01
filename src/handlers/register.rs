@@ -4,7 +4,6 @@ use actix_web::web::Data;
 use actix_web_validator::{Json};
 use serde::Deserialize;
 use validator::{Validate};
-use veruna_domain::DataError;
 use crate::AppState;
 use crate::errors::InternalServerError;
 
