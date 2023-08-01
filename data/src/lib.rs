@@ -21,7 +21,7 @@ pub struct Repositories {
 }
 
 impl Repositories {
-    pub async fn new(connection: Arc<Surreal<Db>>) -> Arc<dyn veruna_domain::input::Repositories> {
+    pub fn new(connection: Arc<Surreal<Db>>) -> Arc<dyn veruna_domain::input::Repositories> {
         Arc::new(Repositories{
             connection
         })

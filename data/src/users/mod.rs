@@ -1,3 +1,4 @@
+use std::arch::aarch64::uint32x2_t;
 use std::sync::Arc;
 use async_trait::async_trait;
 use serde::Deserialize;
@@ -69,9 +70,10 @@ impl UsersRepository {
     }
 }
 
-#[async_trait(? Send)]
+#[async_trait]
 impl UsersRepositoryContract for UsersRepository {
     async fn create_admin(&mut self, username: String) {
+        println!("create_admin");
         let user = self.find_user_by_username(username.clone()).await.unwrap();
         match user {
             None => {
@@ -95,7 +97,7 @@ impl UsersRepositoryContract for UsersRepository {
     }
 
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DataError>> {
-        let record: Record = self.connection
+        let record: UserEntity = self.connection
             .create("users")
             .content(RegisterUser {
                 username,
@@ -116,5 +118,25 @@ impl UsersRepositoryContract for UsersRepository {
                 Some(UserId { value: user.id })
             }
         }
+    }
+
+    async fn count_users(&mut self) -> u32 {
+        let mut response = self.connection
+            .query("SELECT VALUE count(id) as count FROM users")
+            .await
+            .unwrap();
+        let count: Option<u32> = response.take(0).unwrap();
+        match count {
+            None => {
+                0
+            }
+            Some(n) => {
+                n
+            }
+        }
+    }
+
+    async fn add_user_role(&mut self, username: String, role: String) {
+        todo!()
     }
 }

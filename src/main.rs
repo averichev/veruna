@@ -36,6 +36,7 @@ use surrealdb::engine::local::{Db, File};
 use surrealdb::opt::Strict;
 use surrealdb::Surreal;
 use termion::{color, style};
+use veruna_domain::{DomainEntry, DomainEntryTrait};
 use crate::handlers::error_handler::ValidationErrorJsonPayload;
 use crate::middleware::redirect_slash::CheckLogin;
 use crate::middleware::static_admin::SayHi;
@@ -46,6 +47,7 @@ pub struct AppState {
     repositories: Arc<dyn veruna_domain::input::Repositories>,
     connection: Arc<Surreal<Db>>,
     instance_code: String,
+    domain: Arc<dyn DomainEntryTrait>
 }
 
 async fn path_test(request: HttpRequest,
@@ -203,7 +205,7 @@ async fn main() -> std::io::Result<()> {
     let db: Surreal<Db> = Surreal::new::<File>((&*db_url(), Strict)).await.unwrap();
     db.use_ns("test").use_db("test").await.unwrap();
     let connection = Arc::new(db);
-    let repo = Repositories::new(connection.clone()).await;
+    let repo = Repositories::new(connection.clone());
     let instance_code = uuid7::uuid7().to_string();
     veruna_data::migration::Migration::start(connection.clone()).await;
 
@@ -242,7 +244,14 @@ async fn main() -> std::io::Result<()> {
         _ => {}
     }
 
-    let state = AppState { repositories: repo, connection: connection.clone(), instance_code };
+    let domain = DomainEntry::new(repo.clone());
+
+    let state = AppState {
+        repositories: repo.clone(),
+        connection: connection.clone(),
+        instance_code,
+        domain: domain.clone()
+    };
     log::info!("starting HTTP server at http://localhost:20921");
 
     let app_factory = move || {

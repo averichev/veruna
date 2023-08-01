@@ -1,5 +1,6 @@
 use crate::DomainError;
 
+#[derive(Clone)]
 pub struct RegisterUserError {
     pub(crate) message: String,
 }
@@ -13,7 +14,7 @@ impl RegisterUserError {
 }
 
 impl DomainError for RegisterUserError {
-    fn message(self) -> String {
-        self.message
+    fn message(&self) -> String {
+        self.message.clone()
     }
 }

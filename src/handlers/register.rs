@@ -25,9 +25,11 @@ pub(crate) async fn register_action(form: Json<RegisterForm>, app: Data<AppState
     let user_id_option = repository
         .find_user_id_by_username(form.username.clone())
         .await;
+    let mut kit = app.domain.user_kit().await;
     match user_id_option {
         None => {
-            let register_result = repository.register_user(
+            println!("user_id_option none");
+            let register_result = kit.register_user(
                 form.username.clone(),
                 form.password.clone(),
             ).await;
@@ -43,6 +45,7 @@ pub(crate) async fn register_action(form: Json<RegisterForm>, app: Data<AppState
             }
         }
         Some(user_id) => {
+            println!("user_id_option some");
             HttpResponse::Conflict().json(user_id)
         }
     }
