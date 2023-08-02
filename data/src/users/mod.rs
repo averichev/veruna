@@ -5,7 +5,7 @@ use surrealdb::engine::local::Db;
 use surrealdb::{Error, Surreal};
 use surrealdb::sql::Thing;
 use veruna_domain::DataError;
-use veruna_domain::roles::Role;
+use veruna_domain::roles::{Role, RoleId};
 use veruna_domain::users::{AddUser, RegisterUser, User, UsersRepository as UsersRepositoryContract};
 use veruna_domain::users::user_id::UserId;
 
@@ -19,6 +19,7 @@ struct Record {
     #[allow(dead_code)]
     thing: Thing,
 }
+
 #[derive(Debug, Deserialize)]
 struct UserEntity {
     #[serde(rename(deserialize = "id"))]
@@ -30,7 +31,6 @@ impl UsersRepository {
     pub fn new(connection: Arc<Surreal<Db>>) -> Box<dyn UsersRepositoryContract> {
         Box::new(UsersRepository { connection })
     }
-
 }
 
 #[async_trait(? Send)]
@@ -44,7 +44,7 @@ impl UsersRepositoryContract for UsersRepository {
             })
             .await
             .unwrap();
-        Ok(UserId { value: record.thing.id.to_string()})
+        Ok(UserId { value: record.thing.id.to_string() })
     }
 
     async fn find_user_id_by_username(&mut self, username: String) -> Option<UserId> {
@@ -75,8 +75,13 @@ impl UsersRepositoryContract for UsersRepository {
         }
     }
 
-    async fn add_user_role(&mut self, username: String, role: String) {
-        todo!()
+    async fn add_user_role(self, user_id: UserId, role_id: RoleId) {
+        self.connection
+            .query("relate type::thing($users_table, $user_id)->has_roles->type::thing($roles_table, $role_id)")
+            .bind(("users_table", "users"))
+            .bind(("id", user_id.value))
+            .bind(("roles_table", "roles"))
+            .bind(("role_id", role_id.value));
     }
     async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataError>> {
         let mut response = self.connection
@@ -108,7 +113,7 @@ impl UsersRepositoryContract for UsersRepository {
             })
             .await
             .unwrap();
-        Ok(UserId{ value: record.thing.id.to_string() })
+        Ok(UserId { value: record.thing.id.to_string() })
     }
     async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataError>> {
         let mut response = self.connection

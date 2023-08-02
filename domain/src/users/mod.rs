@@ -1,10 +1,14 @@
 pub mod user_id;
 pub mod register_user_error;
+pub mod events;
 
+use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
+use pharos::{Filter, Observable};
 use serde::{Deserialize, Serialize};
 use crate::{DataError, DomainError};
-use crate::roles::Role;
+use crate::roles::{Role, RoleId};
+use crate::users::events::{UserEvents, UserEventsContainer};
 use crate::users::register_user_error::RegisterUserError;
 use crate::users::user_id::UserId;
 
@@ -13,7 +17,7 @@ pub trait UsersRepository {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DataError>>;
     async fn find_user_id_by_username(&mut self, username: String) -> Option<UserId>;
     async fn count_users(&mut self) -> u32;
-    async fn add_user_role(&mut self, username: String, role: String);
+    async fn add_user_role(self, user_id: UserId, role_id: RoleId);
     async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataError>>;
     async fn add_user(&self, username: String) -> Result<UserId, Box<dyn DataError>>;
     async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataError>>;
@@ -36,20 +40,21 @@ pub struct RegisterUser {
     pub password: String,
 }
 
-
 #[async_trait(? Send)]
 pub trait UserKitContract {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>>;
     async fn create_admin(&mut self, username: String);
+    fn events(self) -> Arc<Mutex<UserEventsContainer>>;
 }
 
 pub(crate) struct UserKit {
     pub(crate) repository: Box<dyn UsersRepository>,
+    events: Arc<Mutex<UserEventsContainer>>,
 }
 
 impl UserKit {
-    pub fn new(repository: Box<dyn UsersRepository>) -> UserKit {
-        UserKit { repository }
+    pub fn new(repository: Box<dyn UsersRepository>, user_events: Arc<Mutex<UserEventsContainer>>) -> UserKit {
+        UserKit { repository, events: user_events }
     }
 }
 
@@ -68,6 +73,10 @@ impl UserKitContract for UserKit {
                 if count_users == 1u32 {
                     self.create_admin(username).await;
                 }
+                let mut events = self.events.clone();
+                let filter = Filter::Pointer(|e| e == &UserEvents::AfterRegisterUser);
+                let mut user_events = events.lock().unwrap();
+                let observer = user_events.observe(filter.into()).await.expect("observe");
                 Ok(user_id)
             }
             Err(data_error) => {
@@ -100,5 +109,9 @@ impl UserKitContract for UserKit {
                 }
             }
         }
+    }
+
+    fn events(self) -> Arc<Mutex<UserEventsContainer>> {
+        self.events.clone()
     }
 }

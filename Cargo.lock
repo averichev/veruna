@@ -3151,6 +3151,7 @@ dependencies = [
  "derive_more",
  "dotenv",
  "env_logger",
+ "event-listener",
  "futures-util",
  "log",
  "regex",
@@ -3183,6 +3184,7 @@ version = "1.0.0"
 dependencies = [
  "async-trait",
  "log",
+ "pharos",
  "serde",
  "url",
 ]

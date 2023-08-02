@@ -30,6 +30,7 @@ use async_trait::async_trait;
 use sailfish::TemplateOnce;
 use veruna_domain::nodes::{Node, NodeKitFactory};
 use casbin::{Adapter, CoreApi, DefaultModel, Enforcer, Filter, Model};
+use event_listener::Event;
 use log::log;
 use serde::Serialize;
 use surrealdb::engine::local::{Db, File};
@@ -209,7 +210,6 @@ async fn main() -> std::io::Result<()> {
     let repo = Repositories::new(connection.clone());
     let instance_code = uuid7::uuid7().to_string();
     let domain = DomainEntry::new(repo.clone());
-
     println!("{}{}{}{}{}",
              style::Bold,
              color::Fg(color::Green),

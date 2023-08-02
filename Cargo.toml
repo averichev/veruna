@@ -36,3 +36,4 @@ actix-cors = "0.6.4"
 actix-web-validator = "5.0.1"
 validator = {version = "0.16.1", features = ["derive"]}
 derive_more = "0.99.17"
+event-listener = "2.5.3"
