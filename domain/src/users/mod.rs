@@ -4,11 +4,11 @@ pub mod events;
 
 use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
-use pharos::{Filter, Observable};
+use crossbeam_channel::SendError;
 use serde::{Deserialize, Serialize};
 use crate::{DataError, DomainError};
 use crate::roles::{Role, RoleId};
-use crate::users::events::{UserEvents, UserEventsContainer};
+use crate::users::events::{AfterRegisterUserEvent, UserEventsContainer, UsrEvents};
 use crate::users::register_user_error::RegisterUserError;
 use crate::users::user_id::UserId;
 
@@ -44,17 +44,17 @@ pub struct RegisterUser {
 pub trait UserKitContract {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>>;
     async fn create_admin(&mut self, username: String);
-    fn events(self) -> Arc<Mutex<UserEventsContainer>>;
+    fn events(self) -> Arc<UserEventsContainer>;
 }
 
 pub(crate) struct UserKit {
     pub(crate) repository: Box<dyn UsersRepository>,
-    events: Arc<Mutex<UserEventsContainer>>,
+    event_container: Arc<UserEventsContainer>,
 }
 
 impl UserKit {
-    pub fn new(repository: Box<dyn UsersRepository>, user_events: Arc<Mutex<UserEventsContainer>>) -> UserKit {
-        UserKit { repository, events: user_events }
+    pub fn new(repository: Box<dyn UsersRepository>, user_events: Arc<UserEventsContainer>) -> UserKit {
+        UserKit { repository, event_container: user_events }
     }
 }
 
@@ -67,16 +67,14 @@ impl UserKitContract for UserKit {
             .await;
         match register_result {
             Ok(user_id) => {
-                println!("user exist");
-                let count_users: u32 = self.repository.count_users().await;
-                println!("create admin because 1 user only");
-                if count_users == 1u32 {
-                    self.create_admin(username).await;
-                }
-                let mut events = self.events.clone();
-                let filter = Filter::Pointer(|e| e == &UserEvents::AfterRegisterUser);
-                let mut user_events = events.lock().unwrap();
-                let observer = user_events.observe(filter.into()).await.expect("observe");
+                self.event_container.notify(UsrEvents::AfterRegister(AfterRegisterUserEvent { user_id: user_id.clone() }));
+                // println!("user exist");
+                // let count_users: u32 = self.repository.count_users().await;
+                // println!("create admin because 1 user only");
+                // if count_users == 1u32 {
+                //     self.create_admin(username).await;
+                // }
+
                 Ok(user_id)
             }
             Err(data_error) => {
@@ -111,7 +109,7 @@ impl UserKitContract for UserKit {
         }
     }
 
-    fn events(self) -> Arc<Mutex<UserEventsContainer>> {
-        self.events.clone()
+    fn events(self) -> Arc<UserEventsContainer> {
+        self.event_container.clone()
     }
 }

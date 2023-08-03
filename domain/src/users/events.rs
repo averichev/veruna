@@ -1,32 +1,53 @@
-use pharos::*;
+use crate::users::user_id::UserId;
 
-#[derive(Clone, Debug, PartialEq, Copy)]
-pub(crate) enum UserEvents
-{
-    AfterRegisterUser
+pub struct AfterRegisterUserEvent {
+    pub(crate) user_id: UserId,
 }
 
-//#[derive(Clone)]
+pub enum UsrEvents
+{
+    AfterRegister(AfterRegisterUserEvent)
+}
+
+pub struct UserEventsNotifier {
+    event_type: UsrEvents,
+}
+
+impl UserEventsNotifier {
+    pub fn new(event_type: UsrEvents) -> UserEventsNotifier {
+        UserEventsNotifier { event_type }
+    }
+}
+
+#[derive(Clone)]
 pub struct UserEventsContainer {
-    events: Pharos<UserEvents>,
+    sender: crossbeam_channel::Sender<AfterRegisterUserEvent>,
+    pub test_data: String
 }
 
 impl UserEventsContainer {
     pub(crate) fn new() -> UserEventsContainer {
-        UserEventsContainer { events: Pharos::default() }
+        println!("UserEventsContainer new");
+        let (sender, _) = crossbeam_channel::unbounded::<AfterRegisterUserEvent>();
+        UserEventsContainer { sender, test_data: "Not empty string".to_string() }
+    }
+
+    pub(crate) fn notify(&self, event: UsrEvents) {
+        match event {
+            UsrEvents::AfterRegister(after_register) => {
+               let res = self.sender.send(after_register);
+                match res {
+                    Ok(ok) => {
+                        println!("Сообщение успешно отправлено")
+                    }
+                    Err(e) => {
+                        println!("{}", e)
+                    }
+                }
+            }
+        }
     }
 }
-
-impl Observable<UserEvents> for UserEventsContainer
-{
-    type Error = PharErr;
-
-    fn observe(&mut self, options: ObserveConfig<UserEvents>) -> Observe<'_, UserEvents, Self::Error>
-    {
-        self.events.observe(options)
-    }
-}
-
 
 // #[derive(Clone)]
 // pub struct UserEventsContainer {
