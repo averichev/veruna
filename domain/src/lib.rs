@@ -40,7 +40,8 @@ pub struct DomainEntry {
 impl DomainEntry {
     pub fn new(repositories: Arc<dyn Repositories>) -> Arc<dyn DomainEntryTrait> {
         let events = Arc::new(DomainEvents::new());
-        roles::UserEventsListener::new(events.users.clone());
+        let container = events.users.clone();
+        roles::UserEventsListener::new(events.users.clone()).register_observer(container.receiver.clone());
         Arc::new(DomainEntry { repositories, events })
     }
 }

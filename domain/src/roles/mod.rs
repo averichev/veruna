@@ -22,7 +22,7 @@ impl UserEventsListener {
         UserEventsListener { user_events }
     }
 
-    fn register_observer(&self, receiver: crossbeam_channel::Receiver<AfterRegisterUserEvent>) {
+    pub fn register_observer(&self, receiver: crossbeam_channel::Receiver<AfterRegisterUserEvent>) {
         thread::spawn(move || {
             while let Ok(event) = receiver.recv() {
                 // Обработка события

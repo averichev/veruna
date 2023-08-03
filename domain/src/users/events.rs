@@ -22,14 +22,15 @@ impl UserEventsNotifier {
 #[derive(Clone)]
 pub struct UserEventsContainer {
     sender: crossbeam_channel::Sender<AfterRegisterUserEvent>,
+    pub receiver: crossbeam_channel::Receiver<AfterRegisterUserEvent>,
     pub test_data: String
 }
 
 impl UserEventsContainer {
     pub(crate) fn new() -> UserEventsContainer {
         println!("UserEventsContainer new");
-        let (sender, _) = crossbeam_channel::unbounded::<AfterRegisterUserEvent>();
-        UserEventsContainer { sender, test_data: "Not empty string".to_string() }
+        let (sender, receiver) = crossbeam_channel::unbounded::<AfterRegisterUserEvent>();
+        UserEventsContainer { sender, receiver, test_data: "Not empty string".to_string() }
     }
 
     pub(crate) fn notify(&self, event: UsrEvents) {
