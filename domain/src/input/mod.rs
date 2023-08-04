@@ -1,5 +1,8 @@
+use std::sync::{Arc};
 use async_trait::async_trait;
+use tokio::sync::Mutex;
 use crate::nodes::NodesRepository;
+use crate::roles::RolesRepository;
 use crate::sites::SiteRepository;
 use crate::users::UsersRepository;
 
@@ -7,5 +10,6 @@ use crate::users::UsersRepository;
 pub trait Repositories : Send + Sync {
     async fn site(&self) -> Box<dyn SiteRepository>;
     async fn nodes(&self) -> Box<dyn NodesRepository>;
-    fn users(&self) -> Box<dyn UsersRepository>;
+    fn users(&self) -> Arc<Mutex<dyn UsersRepository>>;
+    fn roles(&self) -> Arc<Mutex<dyn RolesRepository>>;
 }

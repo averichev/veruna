@@ -20,7 +20,8 @@ pub(crate) struct RegisterForm {
 }
 
 pub(crate) async fn register_action(form: Json<RegisterForm>, app: Data<AppState>) -> impl Responder {
-    let mut repository = app.repositories.users();
+    let users_repository = &app.repositories.users(); // Create a named variable
+    let mut repository = users_repository.lock().await; // Lock the repository
     let user_id_option = repository
         .find_user_id_by_username(form.username.clone())
         .await;

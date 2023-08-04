@@ -3184,6 +3184,7 @@ dependencies = [
  "async-trait",
  "serde",
  "surrealdb",
+ "tokio",
  "uuidv7",
  "veruna-domain",
 ]
@@ -3196,6 +3197,7 @@ dependencies = [
  "crossbeam-channel",
  "log",
  "serde",
+ "tokio",
  "url",
 ]
 

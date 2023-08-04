@@ -1,10 +1,11 @@
-use std::sync::Arc;
+use std::sync::{Arc};
 use async_trait::async_trait;
 use serde::Deserialize;
 use surrealdb::engine::local::Db;
-use surrealdb::{Error, Surreal};
+use surrealdb::Surreal;
 use surrealdb::sql::Thing;
-use veruna_domain::DataError;
+use tokio::sync::Mutex;
+use veruna_domain::{DataError, RecordId};
 use veruna_domain::roles::{Role, RoleId};
 use veruna_domain::users::{AddUser, RegisterUser, User, UsersRepository as UsersRepositoryContract};
 use veruna_domain::users::user_id::UserId;
@@ -28,8 +29,8 @@ struct UserEntity {
 }
 
 impl UsersRepository {
-    pub fn new(connection: Arc<Surreal<Db>>) -> Box<dyn UsersRepositoryContract> {
-        Box::new(UsersRepository { connection })
+    pub fn new(connection: Arc<Surreal<Db>>) -> Arc<Mutex<dyn UsersRepositoryContract>> {
+        Arc::new(Mutex::new(UsersRepository { connection }))
     }
 }
 
@@ -59,7 +60,7 @@ impl UsersRepositoryContract for UsersRepository {
         }
     }
 
-    async fn count_users(&mut self) -> u32 {
+    async fn count_users(&mut self) -> Result<u32, Box<dyn DataError>> {
         let mut response = self.connection
             .query("SELECT VALUE count(id) as count FROM users")
             .await
@@ -67,21 +68,32 @@ impl UsersRepositoryContract for UsersRepository {
         let count: Option<u32> = response.take(0).unwrap();
         match count {
             None => {
-                0
+                Ok(0)
             }
             Some(n) => {
-                n
+                Ok(n)
             }
         }
     }
 
-    async fn add_user_role(self, user_id: UserId, role_id: RoleId) {
-        self.connection
+    async fn add_user_role(&self, user_id: UserId, role_id: RoleId) -> Result<Option<Box<dyn RecordId>>, Box<dyn DataError>> {
+        let mut response = self.connection
             .query("relate type::thing($users_table, $user_id)->has_roles->type::thing($roles_table, $role_id)")
             .bind(("users_table", "users"))
             .bind(("id", user_id.value))
             .bind(("roles_table", "roles"))
-            .bind(("role_id", role_id.value));
+            .bind(("role_id", role_id.value))
+            .await
+            .unwrap();
+        let result: Option<Thing> = response.take(0).unwrap();
+        match result {
+            None => {
+                Ok(None)
+            }
+            Some(thing) => {
+                Ok(Some(Box::new(crate::RecordId::new(thing.id.to_string()))))
+            }
+        }
     }
     async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataError>> {
         let mut response = self.connection

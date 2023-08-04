@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use std::fmt;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use async_trait::async_trait;
 use crate::input::Repositories;
 use crate::sites::site_kit::{SiteKit, SiteKitFactory};
@@ -41,7 +41,12 @@ impl DomainEntry {
     pub fn new(repositories: Arc<dyn Repositories>) -> Arc<dyn DomainEntryTrait> {
         let events = Arc::new(DomainEvents::new());
         let container = events.users.clone();
-        roles::UserEventsListener::new(events.users.clone()).register_observer(container.receiver.clone());
+        let listener = roles::UserEventsListener::new(
+            events.users.clone(),
+            repositories.users(),
+            repositories.roles(),
+        );
+        listener.register_observer(container.receiver());
         Arc::new(DomainEntry { repositories, events })
     }
 }
@@ -69,4 +74,8 @@ pub trait DomainError: fmt::Debug {
 
 pub trait DataError: fmt::Debug {
     fn message(&self) -> String;
+}
+
+pub trait RecordId {
+    fn value(&self) -> String;
 }
