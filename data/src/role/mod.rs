@@ -33,7 +33,7 @@ impl RolesRepositoryTrait for RolesRepository {
             .bind(("role_name", role_name))
             .await
             .unwrap();
-        let result: Option<Thing> = response.take(0).unwrap();
+        let result: Option<Thing> = response.take((0, "id")).unwrap();
 
         match result {
             None => {

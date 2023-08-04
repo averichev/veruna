@@ -62,30 +62,28 @@ impl UsersRepositoryContract for UsersRepository {
 
     async fn count_users(&mut self) -> Result<u32, Box<dyn DataError>> {
         let mut response = self.connection
-            .query("SELECT VALUE count(id) as count FROM users")
+            .query("SELECT value count FROM (SELECT count() as count FROM users GROUP BY count)")
             .await
             .unwrap();
-        let count: Option<u32> = response.take(0).unwrap();
-        match count {
-            None => {
-                Ok(0)
-            }
-            Some(n) => {
-                Ok(n)
-            }
-        }
+        let count: Vec<u32> = response.take(0).unwrap();
+        let result = count.get(0).unwrap();
+        Ok(*result)
     }
 
     async fn add_user_role(&self, user_id: UserId, role_id: RoleId) -> Result<Option<Box<dyn RecordId>>, Box<dyn DataError>> {
         let mut response = self.connection
-            .query("relate type::thing($users_table, $user_id)->has_roles->type::thing($roles_table, $role_id)")
+            .query("
+                LET $user = type::thing($users_table, $user_id);
+                LET $role = type::thing($roles_table, $role_id);
+                SELECT VALUE id FROM (RELATE $user->has_roles->$role);
+            ")
             .bind(("users_table", "users"))
-            .bind(("id", user_id.value))
+            .bind(("user_id", user_id.value))
             .bind(("roles_table", "roles"))
             .bind(("role_id", role_id.value))
             .await
             .unwrap();
-        let result: Option<Thing> = response.take(0).unwrap();
+        let result: Option<Thing> = response.take(2).unwrap();
         match result {
             None => {
                 Ok(None)
