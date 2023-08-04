@@ -6,18 +6,16 @@ on:
       - master
 
 jobs:
-  package_and_publish:
-    name: Package and Publish
+  semantic_release:
+    name: Semantic release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Semantic Release
+      - name: Semantic release
         uses: cycjimmy/semantic-release-action@v3
         with:
           extra_plugins: |
-            semantic-release-cargo
             @semantic-release/git
             @semantic-release/changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
