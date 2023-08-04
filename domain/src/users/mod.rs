@@ -3,6 +3,9 @@ pub mod register_user_error;
 pub mod events;
 
 use std::sync::Arc;
+use argon2::{Argon2, PasswordHasher};
+use argon2::password_hash::rand_core::OsRng;
+use argon2::password_hash::SaltString;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
@@ -14,7 +17,7 @@ use crate::users::user_id::UserId;
 
 #[async_trait(? Send)]
 pub trait UsersRepository: Send {
-    async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DataError>>;
+    async fn register_user(&mut self, user: RegisterUser) -> Result<UserId, Box<dyn DataError>>;
     async fn find_user_id_by_username(&mut self, username: String) -> Option<UserId>;
     async fn count_users(&mut self) -> Result<u32, Box<dyn DataError>>;
     async fn add_user_role(&self, user_id: UserId, role_id: RoleId) -> Result<Option<Box<dyn RecordId>>, Box<dyn DataError>>;
@@ -38,6 +41,7 @@ pub struct AddUser {
 pub struct RegisterUser {
     pub username: String,
     pub password: String,
+    pub salt: String,
 }
 
 #[async_trait(? Send)]
@@ -61,8 +65,15 @@ impl UserKit {
 #[async_trait(? Send)]
 impl UserKitContract for UserKit {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>> {
+        let argon2 = Argon2::default();
+        let salt = SaltString::generate(&mut OsRng);
+        let password = argon2.hash_password(password.as_ref(), &salt).unwrap();
         let register_result = self.repository.lock().await
-            .register_user(username.clone(), password)
+            .register_user(RegisterUser{
+                username,
+                password: password.to_string(),
+                salt: salt.to_string(),
+            })
             .await;
         match register_result {
             Ok(user_id) => {

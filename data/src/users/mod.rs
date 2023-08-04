@@ -36,13 +36,10 @@ impl UsersRepository {
 
 #[async_trait(? Send)]
 impl UsersRepositoryContract for UsersRepository {
-    async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DataError>> {
+    async fn register_user(&mut self, user: RegisterUser) -> Result<UserId, Box<dyn DataError>> {
         let record: UserEntity = self.connection
             .create("users")
-            .content(RegisterUser {
-                username,
-                password,
-            })
+            .content(user)
             .await
             .unwrap();
         Ok(UserId { value: record.thing.id.to_string() })

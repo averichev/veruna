@@ -3193,6 +3193,7 @@ dependencies = [
 name = "veruna-domain"
 version = "1.0.0"
 dependencies = [
+ "argon2",
  "async-trait",
  "crossbeam-channel",
  "log",

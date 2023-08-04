@@ -10,3 +10,4 @@ log = "0.*"
 serde = "1.0.166"
 crossbeam-channel = "0.5.8"
 tokio = { version = "1.29.1" }
+argon2 = "0.5.1"
