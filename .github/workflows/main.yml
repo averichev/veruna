@@ -15,6 +15,7 @@ jobs:
         uses: cycjimmy/semantic-release-action@v3
         with:
           extra_plugins: |
+            semantic-release-cargo
             @semantic-release/git
             @semantic-release/changelog
         env:
