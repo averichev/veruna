@@ -26,6 +26,7 @@ struct UserEntity {
     #[serde(rename(deserialize = "id"))]
     thing: Thing,
     username: String,
+    password: String,
 }
 
 impl UsersRepository {
@@ -106,6 +107,7 @@ impl UsersRepositoryContract for UsersRepository {
                 {
                     id: user_entity.thing.id.to_string(),
                     username: user_entity.username,
+                    password: user_entity.password,
                 })
                 )
             }

@@ -45,7 +45,6 @@ pub(crate) async fn register_action(form: Json<RegisterForm>, app: Data<AppState
             }
         }
         Some(user_id) => {
-            println!("user_id_option some");
             HttpResponse::Conflict().json(user_id)
         }
     }

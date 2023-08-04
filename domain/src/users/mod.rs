@@ -1,9 +1,9 @@
 pub mod user_id;
-pub mod register_user_error;
+pub mod errors;
 pub mod events;
 
 use std::sync::Arc;
-use argon2::{Argon2, PasswordHasher};
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use async_trait::async_trait;
@@ -12,7 +12,7 @@ use tokio::sync::Mutex;
 use crate::{DataError, DomainError, RecordId};
 use crate::roles::{Role, RoleId};
 use crate::users::events::{AfterRegisterUserEvent, UserEventsContainer, UsrEvents};
-use crate::users::register_user_error::RegisterUserError;
+use crate::users::errors::{LoginError, RegisterUserError};
 use crate::users::user_id::UserId;
 
 #[async_trait(? Send)]
@@ -30,6 +30,7 @@ pub trait UsersRepository: Send {
 pub struct User {
     pub id: String,
     pub username: String,
+    pub password: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -41,7 +42,11 @@ pub struct AddUser {
 pub struct RegisterUser {
     pub username: String,
     pub password: String,
-    pub salt: String,
+}
+
+pub struct LoginUser {
+    pub username: String,
+    pub password: String,
 }
 
 #[async_trait(? Send)]
@@ -49,6 +54,7 @@ pub trait UserKitContract {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>>;
     async fn create_admin(&mut self, username: String);
     fn events(self) -> Arc<UserEventsContainer>;
+    async fn verify_user_password(&self, user: LoginUser) -> Result<bool, Box<dyn DomainError>>;
 }
 
 pub(crate) struct UserKit {
@@ -60,19 +66,24 @@ impl UserKit {
     pub fn new(repository: Arc<Mutex<dyn UsersRepository>>, user_events: Arc<UserEventsContainer>) -> UserKit {
         UserKit { repository, event_container: user_events }
     }
+    fn encode_password(&self, plain_password: String, salt: &SaltString) -> String {
+        let argon2 = Argon2::default();
+        let password = argon2.hash_password(plain_password.as_ref(), salt).unwrap();
+        password.to_string()
+    }
 }
 
 #[async_trait(? Send)]
 impl UserKitContract for UserKit {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>> {
-        let argon2 = Argon2::default();
         let salt = SaltString::generate(&mut OsRng);
-        let password = argon2.hash_password(password.as_ref(), &salt).unwrap();
+
+        let encoded_password = self.encode_password(password, &salt);
+
         let register_result = self.repository.lock().await
-            .register_user(RegisterUser{
+            .register_user(RegisterUser {
                 username,
-                password: password.to_string(),
-                salt: salt.to_string(),
+                password: encoded_password
             })
             .await;
         match register_result {
@@ -114,5 +125,20 @@ impl UserKitContract for UserKit {
 
     fn events(self) -> Arc<UserEventsContainer> {
         self.event_container.clone()
+    }
+
+    async fn verify_user_password(&self, login_user: LoginUser) -> Result<bool, Box<dyn DomainError>> {
+        let repository = self.repository.lock().await;
+        let user = repository.find_user_by_username(login_user.username).await.unwrap();
+        match user {
+            None => {
+                Err(Box::new(LoginError::new("Пользователь не найден".to_string())))
+            }
+            Some(user) => {
+                let parsed_password = PasswordHash::new(&user.password).unwrap();
+                let is_ok = Argon2::default().verify_password(login_user.password.as_ref(), &parsed_password).is_ok();
+                Ok(is_ok)
+            }
+        }
     }
 }

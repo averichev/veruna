@@ -1,6 +1,7 @@
 use actix_web::error::InternalError;
 use actix_web::http::StatusCode;
 use actix_web::HttpResponse;
+use serde::Serialize;
 
 pub(crate) struct NotFound {
     message: String,
@@ -26,4 +27,13 @@ impl Forbidden {
             StatusCode::FORBIDDEN,
         ))
     }
+}
+
+#[derive(Serialize)]
+pub(crate) struct LoggedUser;
+
+#[derive(Serialize)]
+pub(crate) struct LoginResponse {
+    pub(crate) result: bool,
+    pub(crate) user: Option<LoggedUser>
 }
