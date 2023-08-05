@@ -30,10 +30,18 @@ impl Forbidden {
 }
 
 #[derive(Serialize)]
-pub(crate) struct LoggedUser;
+pub(crate) struct LoggedUser{
+    pub(crate) username: String
+}
+
+#[derive(Serialize)]
+pub(crate) struct LoginResponseData{
+    pub(crate) user: LoggedUser,
+    pub(crate) token: String
+}
 
 #[derive(Serialize)]
 pub(crate) struct LoginResponse {
     pub(crate) result: bool,
-    pub(crate) user: Option<LoggedUser>
+    pub(crate) data: Option<LoginResponseData>
 }

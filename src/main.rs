@@ -21,7 +21,7 @@ use actix_web::middleware::Logger;
 use actix_web::{
     dev::{Service, Transform}
 };
-use actix_web_validator::{JsonConfig, QsQueryConfig};
+use actix_web_validator::JsonConfig;
 use dotenv;
 use veruna_data::Repositories;
 use veruna_domain::sites::{Site, SiteId};
@@ -30,7 +30,6 @@ use async_trait::async_trait;
 use sailfish::TemplateOnce;
 use veruna_domain::nodes::{Node, NodeKitFactory};
 use casbin::{Adapter, CoreApi, DefaultModel, Enforcer, Filter, Model};
-use event_listener::Event;
 use log::log;
 use serde::Serialize;
 use surrealdb::engine::local::{Db, File};
