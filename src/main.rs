@@ -266,6 +266,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(CheckLogin)
             .route("/login/", web::post().to(handlers::login::handle_form_data))
             .route("/register/", web::post().to(handlers::register::register_action))
+            .route("/get-current-user/", web::post().to(handlers::get_current_user::handle_form_data))
             .service(
                 web::scope("/static/admin")
                     .wrap(SayHi)
