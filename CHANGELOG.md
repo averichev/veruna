@@ -1,11 +1,31 @@
+## [1.0.7](https://github.com/averichev/veruna/compare/v1.0.6...v1.0.7) (2023-08-06)
+
+### Chores
+
+- GitHub action ([db7665a](https://github.com/averichev/veruna/commit/db7665ac42f4bc08955e873dd7139ab34031a36f))
+- GitHub action ([7bedbb7](https://github.com/averichev/veruna/commit/7bedbb7539d222a9a5c9a7e7213e57fabe96cc1a))
+- GitHub action ([760a06e](https://github.com/averichev/veruna/commit/760a06e6799d684534cd03d208e20752928a7d50))
+- GitHub action ([48b45fb](https://github.com/averichev/veruna/commit/48b45fb3b03cc695a0ba92b0d0f999e390b10b4f))
+- Version update ([0b247b4](https://github.com/averichev/veruna/commit/0b247b40514fc4a2da8d9c3bfd0e63c23758802b))
+
+### Improvements
+
+- JWT verification proof of concept ([fccfdd4](https://github.com/averichev/veruna/commit/fccfdd40d406b23f8cafc3a17c83bec800169cea))
+- Login jwt response ([cc1f229](https://github.com/averichev/veruna/commit/cc1f229f31072dfeea5379a5cdfb4c9876cc1376))
+- Store encoded password ([36f9f67](https://github.com/averichev/veruna/commit/36f9f6703bd0cdfacca9fd8918783146f823bf9c))
+- User login verification with stored encoded password ([6b23178](https://github.com/averichev/veruna/commit/6b2317872d8090c6afa634fc84d88daa367ef3ad))
+
+### Other
+
+- Merge branch 'master' of https://github.com/averichev/veruna ([a678acf](https://github.com/averichev/veruna/commit/a678acf7627c3f083573573559f22a34b158f0af))
+
 ## [1.0.6](https://github.com/averichev/veruna/compare/v1.0.5...v1.0.6) (2023-08-04)
 
 ## [1.0.5](https://github.com/averichev/veruna/compare/v1.0.4...v1.0.5) (2023-08-04)
 
-
 ### Bug Fixes
 
-* Unnecessary import ([e5a4ca5](https://github.com/averichev/veruna/commit/e5a4ca5ad5c5edb6f1f3d9e1a70577321ca26b37))
+- Unnecessary import ([e5a4ca5](https://github.com/averichev/veruna/commit/e5a4ca5ad5c5edb6f1f3d9e1a70577321ca26b37))
 
 ## [1.0.4](https://github.com/averichev/veruna/compare/v1.0.3...v1.0.4) (2023-07-24)
 
