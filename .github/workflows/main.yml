@@ -10,13 +10,10 @@ jobs:
     name: Semantic release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Semantic release
-        uses: cycjimmy/semantic-release-action@v3
-        with:
-          extra_plugins: |
-            semantic-release-cargo
-            @semantic-release/git
-            @semantic-release/changelog
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Semantic Release
+        uses: ridedott/release-me-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
