@@ -1,3 +1,9 @@
+## [1.0.9](https://github.com/averichev/veruna/compare/v1.0.8...v1.0.9) (2023-08-07)
+
+### Improvements
+
+- Claims in JWT ([64191b0](https://github.com/averichev/veruna/commit/64191b0ad56bce016795ebad0df63d07b4d17514))
+
 ## [1.0.8](https://github.com/averichev/veruna/compare/v1.0.7...v1.0.8) (2023-08-07)
 
 ### Improvements
