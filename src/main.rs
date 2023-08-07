@@ -5,6 +5,7 @@ mod policy;
 mod handlers;
 mod middleware;
 mod errors;
+mod models;
 
 use std::env;
 use std::ops::Deref;

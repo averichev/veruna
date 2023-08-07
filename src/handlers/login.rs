@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::fmt::Display;
 use actix_web::{HttpResponse, Responder};
 use actix_web::web::Data;
@@ -11,6 +10,7 @@ use sha2::Sha256;
 use validator::{Validate};
 use veruna_domain::users::LoginUser;
 use crate::AppState;
+use crate::models::Claims;
 use crate::response::{LoggedUser, LoginResponse, LoginResponseData};
 
 #[derive(Deserialize, Validate)]
@@ -30,29 +30,20 @@ pub(crate) async fn handle_form_data(form: Json<FormData>, app: Data<AppState>) 
     ).await;
     match verify {
         Ok(result) => {
-            match result {
-                true => {
-                    let key: Hmac<Sha256> = Hmac::new_from_slice(b"some-secret").unwrap();
-                    let mut claims = BTreeMap::new();
-                    claims.insert("sub", "someone");
-                    let token_str = claims.sign_with_key(&key).unwrap();
-                    HttpResponse::Ok().json(
-                        LoginResponse {
-                            result,
-                            data: Some(LoginResponseData {
-                                user: LoggedUser {
-                                    username: "".to_string()
-                                },
-                                token: token_str,
-                            }),
-                        }
-                    ) // возвращать юзера
+            let key: Hmac<Sha256> = Hmac::new_from_slice(b"some-secret").unwrap();
+            let claims = Claims { username: result.username(), id: result.id() };
+            let token_str = claims.sign_with_key(&key).unwrap();
+            HttpResponse::Ok().json(
+                LoginResponse {
+                    result: true,
+                    data: Some(LoginResponseData {
+                        user: LoggedUser {
+                            username: result.username()
+                        },
+                        token: token_str,
+                    }),
                 }
-                false => {
-                    println!("Не пройдена проверка");
-                    HttpResponse::Unauthorized().json(LoginResponse { result: false, data: None })
-                }
-            }
+            )
         }
         Err(_) => {
             println!("Пользователь не найден");

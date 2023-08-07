@@ -1,6 +1,7 @@
 pub mod user_id;
 pub mod errors;
 pub mod events;
+pub mod models;
 
 use std::sync::Arc;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
@@ -13,6 +14,7 @@ use crate::{DataError, DomainError, RecordId};
 use crate::roles::{Role, RoleId};
 use crate::users::events::{AfterRegisterUserEvent, UserEventsContainer, UsrEvents};
 use crate::users::errors::{LoginError, RegisterUserError};
+use crate::users::models::claims::{Claims, ClaimsTrait};
 use crate::users::user_id::UserId;
 
 #[async_trait(? Send)]
@@ -54,7 +56,7 @@ pub trait UserKitContract {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>>;
     async fn create_admin(&mut self, username: String);
     fn events(self) -> Arc<UserEventsContainer>;
-    async fn verify_user_password(&self, user: LoginUser) -> Result<bool, Box<dyn DomainError>>;
+    async fn verify_user_password(&self, user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainError>>;
 }
 
 pub(crate) struct UserKit {
@@ -83,7 +85,7 @@ impl UserKitContract for UserKit {
         let register_result = self.repository.lock().await
             .register_user(RegisterUser {
                 username,
-                password: encoded_password
+                password: encoded_password,
             })
             .await;
         match register_result {
@@ -127,7 +129,7 @@ impl UserKitContract for UserKit {
         self.event_container.clone()
     }
 
-    async fn verify_user_password(&self, login_user: LoginUser) -> Result<bool, Box<dyn DomainError>> {
+    async fn verify_user_password(&self, login_user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainError>> {
         let repository = self.repository.lock().await;
         let user = repository.find_user_by_username(login_user.username).await.unwrap();
         match user {
@@ -136,9 +138,25 @@ impl UserKitContract for UserKit {
             }
             Some(user) => {
                 let parsed_password = PasswordHash::new(&user.password).unwrap();
-                let is_ok = Argon2::default().verify_password(login_user.password.as_ref(), &parsed_password).is_ok();
-                Ok(is_ok)
+                let is_ok = Argon2::default()
+                    .verify_password(
+                        login_user.password.as_ref(),
+                        &parsed_password,
+                    )
+                    .is_ok();
+                if is_ok {
+                    Ok(Claims::new(user.username, user.id))
+                }
+                else {
+                    Err(Box::new(LoginError::new("Неверный пароль".to_string())))
+                }
             }
         }
     }
 }
+
+
+
+
+
+
