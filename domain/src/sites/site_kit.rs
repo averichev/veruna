@@ -12,6 +12,7 @@ pub trait SiteKit {
     fn reader(&self) -> Box<dyn Reader + '_>;
     fn site_id_builder(&self) -> Box<dyn SiteIdBuilder>;
     fn site_builder(&self) -> Box<dyn SiteBuilder>;
+    async fn list(&self) -> Arc<Vec<Box<dyn Site>>>;
 }
 
 struct SiteKitImpl {
@@ -54,6 +55,11 @@ impl SiteKit for SiteKitImpl {
     fn site_builder(&self) -> Box<dyn SiteBuilder> {
         let result = SiteBuilderImpl::new();
         result
+    }
+
+    async fn list(&self) -> Arc<Vec<Box<dyn Site>>> {
+        let list = self.site_repository.list().await;
+        list
     }
 }
 

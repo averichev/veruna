@@ -38,7 +38,8 @@ use surrealdb::Surreal;
 use termion::{color, style};
 use veruna_domain::{DomainEntry, DomainEntryTrait};
 use crate::handlers::error_handler::ValidationErrorJsonPayload;
-use crate::middleware::redirect_slash::CheckLogin;
+use crate::middleware::admin_api::AdminApi;
+use crate::middleware::redirect_slash::{RedirectSlash};
 use crate::middleware::static_admin::SayHi;
 use crate::policy::Policy;
 
@@ -47,13 +48,13 @@ pub struct AppState {
     repositories: Arc<dyn veruna_domain::input::Repositories>,
     connection: Arc<Surreal<Db>>,
     instance_code: String,
-    domain: Arc<dyn DomainEntryTrait>
+    domain: Arc<dyn DomainEntryTrait>,
 }
 
 async fn path_test(request: HttpRequest,
                    app: Data<AppState>) -> impl Responder
 {
-    let repo = app.repositories.site().await;
+    let repo = app.repositories.site();
     let site_kit = SiteKitFactory::build(repo);
     let uri_parser = uri::UriParser::new(&request);
     if uri_parser.ends_with_slash() {}
@@ -247,7 +248,7 @@ async fn main() -> std::io::Result<()> {
         repositories: repo.clone(),
         connection: connection.clone(),
         instance_code,
-        domain: domain.clone()
+        domain: domain.clone(),
     };
     log::info!("starting HTTP server at http://localhost:20921");
 
@@ -263,10 +264,15 @@ async fn main() -> std::io::Result<()> {
             }))
             .wrap(cors)
             .wrap(Logger::default())
-            .wrap(CheckLogin)
+            .wrap(RedirectSlash)
+            .service(
+                web::scope("/admin")
+                    .wrap(AdminApi)
+            )
             .route("/login/", web::post().to(handlers::login::handle_form_data))
             .route("/register/", web::post().to(handlers::register::register_action))
             .route("/get-current-user/", web::post().to(handlers::get_current_user::handle_form_data))
+            .route("/admin/site/list/", web::get().to(handlers::admin::sites::sites_list))
             .service(
                 web::scope("/static/admin")
                     .wrap(SayHi)

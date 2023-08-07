@@ -5,12 +5,14 @@ use crate::pages::PageId;
 use async_trait::async_trait;
 use serde::Serialize;
 use serde::Deserialize;
+use crate::sites::site_kit::SiteKit;
 
 #[async_trait(? Send)]
 pub trait SiteRepository {
     async fn create(&mut self, site: Box<dyn Site>) -> Box<dyn SiteId>;
     async fn read(&self, read_by: SiteReadOption) -> Option<(Arc<dyn Site>, Box<dyn SiteId>)>;
-    fn delete(&self, site_id: Box<dyn Site>) -> bool;
+    async fn delete(&self, site_id: Box<dyn SiteId>) -> bool;
+    async fn list(&self) -> Arc<Vec<Box<dyn Site>>>;
 }
 
 pub trait CreatedSite {
@@ -97,6 +99,17 @@ pub struct SiteImpl {
     pub domain: String,
     pub name: String,
     pub description: String,
+}
+
+impl SiteImpl {
+    pub fn new(domain: String, name: String, description: String) -> Box<dyn Site> {
+        Box::new(SiteImpl {
+            domain,
+            name,
+            description,
+        }
+        )
+    }
 }
 
 impl Site for SiteImpl {

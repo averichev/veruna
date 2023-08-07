@@ -1609,6 +1609,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "linq"
+version = "0.0.1-release"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dde578969ddd12b2d3eb2cdc5a5d7900b655d4a35b53b10c66df0fb4043b387"
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3180,6 +3186,7 @@ dependencies = [
  "futures-util",
  "hmac",
  "jwt",
+ "linq",
  "log",
  "regex",
  "sailfish",
@@ -3200,6 +3207,7 @@ name = "veruna-data"
 version = "1.0.0"
 dependencies = [
  "async-trait",
+ "linq",
  "serde",
  "surrealdb",
  "tokio",

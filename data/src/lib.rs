@@ -34,8 +34,8 @@ impl Repositories {
 
 #[async_trait(? Send)]
 impl veruna_domain::input::Repositories for Repositories {
-    async fn site(&self) -> Box<dyn SiteRepositoryContract> {
-        SiteRepositoryImpl::new(self.connection.clone()).await
+    fn site(&self) -> Box<dyn SiteRepositoryContract> {
+        SiteRepositoryImpl::new(self.connection.clone())
     }
 
     async fn nodes(&self) -> Box<dyn NodesRepository> {

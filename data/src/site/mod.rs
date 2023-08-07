@@ -4,6 +4,7 @@ use surrealdb::engine::local::Db;
 use surrealdb::{Error, Surreal};
 use veruna_domain::sites::{Site, SiteId, SiteIdBuilder, SiteIdBuilderImpl, SiteImpl, SiteReadOption, SiteRepository};
 use async_trait::async_trait;
+use linq::iter::Enumerable;
 use serde::Deserialize;
 use surrealdb::sql::Thing;
 use crate::SiteRepositoryContract;
@@ -20,7 +21,7 @@ struct Record {
 }
 
 impl SiteRepositoryImpl {
-    pub async fn new(connection: Arc<Surreal<Db>>) -> Box<dyn SiteRepositoryContract> {
+    pub fn new(connection: Arc<Surreal<Db>>) -> Box<dyn SiteRepositoryContract> {
         let result = SiteRepositoryImpl { sites: Default::default(), connection };
         Box::new(result)
     }
@@ -124,7 +125,31 @@ impl SiteRepository for SiteRepositoryImpl {
         }
     }
 
-    fn delete(&self, site_id: Box<dyn Site>) -> bool {
+    async fn delete(&self, site_id: Box<dyn SiteId>) -> bool {
         todo!()
     }
+
+    async fn list(&self) -> Arc<Vec<Box<dyn Site>>> {
+        let mut response = self.connection
+            .query("SELECT * FROM sites")
+            .await
+            .unwrap();
+        let sites: Option<SiteEntity> = response.take(0).unwrap();
+        let result: Vec<Box<dyn Site>> = sites.iter()
+            .select(|n| SiteImpl::new(
+                (&n.domain).to_string(),
+                "".to_string(),
+                "".to_string())
+            )
+            .collect();
+        Arc::new(result)
+    }
+}
+
+
+#[derive(Debug, Deserialize)]
+struct SiteEntity {
+    #[serde(rename(deserialize = "id"))]
+    thing: Thing,
+    domain: String,
 }

@@ -45,6 +45,12 @@ impl Migration {
                     ON TABLE has_roles
                     COLUMNS in, out UNIQUE;
             ")
+            .query("
+                DEFINE TABLE sites SCHEMAFULL;
+                DEFINE FIELD domain ON TABLE sites TYPE string;
+                DEFINE FIELD name ON TABLE sites TYPE string;
+                DEFINE FIELD description ON TABLE sites TYPE string;
+            ")
             .await
             .unwrap();
     }

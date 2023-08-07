@@ -8,9 +8,9 @@ use actix_web::{
 use futures_util::future::LocalBoxFuture;
 use regex::Regex;
 
-pub struct CheckLogin;
+pub struct RedirectSlash;
 
-impl<S, B> Transform<S, ServiceRequest> for CheckLogin
+impl<S, B> Transform<S, ServiceRequest> for RedirectSlash
     where
         S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
         S::Future: 'static,
@@ -18,20 +18,20 @@ impl<S, B> Transform<S, ServiceRequest> for CheckLogin
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
-    type Transform = CheckLoginMiddleware<S>;
+    type Transform = RedirectSlashMiddleware<S>;
     type InitError = ();
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(CheckLoginMiddleware { service }))
+        ready(Ok(RedirectSlashMiddleware { service }))
     }
 }
 
-pub struct CheckLoginMiddleware<S> {
+pub struct RedirectSlashMiddleware<S> {
     service: S,
 }
 
-impl<S, B> Service<ServiceRequest> for CheckLoginMiddleware<S>
+impl<S, B> Service<ServiceRequest> for RedirectSlashMiddleware<S>
     where
         S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
         S::Future: 'static,
@@ -62,17 +62,6 @@ impl<S, B> Service<ServiceRequest> for CheckLoginMiddleware<S>
 
             return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
         }
-        // if !is_logged_in && request.path() != "/login" {
-        //     let (request, _pl) = request.into_parts();
-        //
-        //     let response = HttpResponse::Found()
-        //         .insert_header((http::header::LOCATION, "/login"))
-        //         .finish()
-        //         // constructed responses map to "right" body
-        //         .map_into_right_body();
-        //
-        //     return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
-        // }
 
         let res = self.service.call(request);
 
