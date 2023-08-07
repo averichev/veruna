@@ -1,3 +1,9 @@
+## [1.0.8](https://github.com/averichev/veruna/compare/v1.0.7...v1.0.8) (2023-08-07)
+
+### Improvements
+
+- Site list API and jwt verification middleware ([762ab7b](https://github.com/averichev/veruna/commit/762ab7b0f4a55e19fc1be6a91eaaeae094a0798f))
+
 ## [1.0.7](https://github.com/averichev/veruna/compare/v1.0.6...v1.0.7) (2023-08-06)
 
 ### Chores
