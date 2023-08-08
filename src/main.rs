@@ -42,6 +42,7 @@ use crate::handlers::error_handler::ValidationErrorJsonPayload;
 use crate::middleware::admin_api::AdminApi;
 use crate::middleware::redirect_slash::{RedirectSlash};
 use crate::middleware::static_admin::SayHi;
+use crate::models::{CurrentUser, CurrentUserTrait};
 use crate::policy::Policy;
 
 #[derive(Clone)]
@@ -251,6 +252,9 @@ async fn main() -> std::io::Result<()> {
         instance_code,
         domain: domain.clone(),
     };
+
+    let current_user = CurrentUser::new();
+
     log::info!("starting HTTP server at http://localhost:20921");
 
     let app_factory = move || {
@@ -267,12 +271,12 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(RedirectSlash)
             .service(
-                web::scope("/admin")
+                web::scope("/api/protected")
                     .wrap(AdminApi)
             )
             .route("/login/", web::post().to(handlers::login::handle_form_data))
             .route("/register/", web::post().to(handlers::register::register_action))
-            .route("/get-current-user/", web::post().to(handlers::get_current_user::handle_form_data))
+            .route("/api/protected/get-current-user/", web::post().to(handlers::get_current_user::handle_form_data))
             .route("/admin/site/list/", web::get().to(handlers::admin::sites::sites_list))
             .service(
                 web::scope("/static/admin")
@@ -285,6 +289,7 @@ async fn main() -> std::io::Result<()> {
             .route("/admin/", web::get().to(admin))
             .route("{tail:.*}", web::get().to(path_test))
             .app_data(Data::new(state.clone()))
+            .app_data(Data::new(current_user.clone()))
     };
 
     HttpServer::new(app_factory)
@@ -292,5 +297,6 @@ async fn main() -> std::io::Result<()> {
         .run()
         .await
 }
+
 
 
