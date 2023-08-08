@@ -9,7 +9,7 @@ mod models;
 
 use std::env;
 use std::ops::Deref;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use actix_cors::Cors;
 use veruna_domain::sites::site_kit::SiteKitFactory;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest};
@@ -202,7 +202,7 @@ fn db_url() -> String {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
-    env::set_var("RUST_LOG", "info");
+    env::set_var("RUST_LOG", "debug");
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
     let db: Surreal<Db> = Surreal::new::<File>((&*db_url(), Strict)).await.unwrap();
@@ -254,6 +254,8 @@ async fn main() -> std::io::Result<()> {
     };
 
     let current_user = CurrentUser::new();
+    let current_user_arc: Arc<Mutex<dyn CurrentUserTrait>> = Arc::new(Mutex::new(current_user.clone()));
+    let data = Data::new(current_user_arc.clone());
 
     log::info!("starting HTTP server at http://localhost:20921");
 
@@ -272,11 +274,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(RedirectSlash)
             .service(
                 web::scope("/api/protected")
-                    .wrap(AdminApi)
+                    .wrap(AdminApi::new(current_user_arc.clone()))
+                    .route("get-current-user/", web::post().to(handlers::get_current_user::handle_form_data))
             )
             .route("/login/", web::post().to(handlers::login::handle_form_data))
             .route("/register/", web::post().to(handlers::register::register_action))
-            .route("/api/protected/get-current-user/", web::post().to(handlers::get_current_user::handle_form_data))
             .route("/admin/site/list/", web::get().to(handlers::admin::sites::sites_list))
             .service(
                 web::scope("/static/admin")
@@ -289,7 +291,7 @@ async fn main() -> std::io::Result<()> {
             .route("/admin/", web::get().to(admin))
             .route("{tail:.*}", web::get().to(path_test))
             .app_data(Data::new(state.clone()))
-            .app_data(Data::new(current_user.clone()))
+            .app_data(Data::clone(&data))
     };
 
     HttpServer::new(app_factory)

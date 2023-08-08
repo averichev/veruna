@@ -1,3 +1,4 @@
+use std::sync::{Arc, Mutex};
 use actix_web::{HttpResponse, Responder};
 use actix_web::web::Data;
 use actix_web_validator::Json;
@@ -18,8 +19,8 @@ pub(crate) struct CurrentUserResponse {
     username: String,
 }
 
-pub(crate) async fn handle_form_data(request: Json<CurrentUserRequest>, app: Data<AppState>, current_user: Data<CurrentUser>) -> impl Responder {
+pub(crate) async fn handle_form_data(app: Data<AppState>, current_user: Data<Arc<Mutex<dyn CurrentUserTrait>>>) -> impl Responder {
     HttpResponse::Ok().json(
-        CurrentUserResponse { username: current_user.username() }
+        CurrentUserResponse { username: current_user.lock().unwrap().username() }
     )
 }

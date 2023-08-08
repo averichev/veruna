@@ -1,5 +1,3 @@
-use std::rc::Rc;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -8,12 +6,13 @@ pub(crate) struct Claims {
     pub(crate) id: String,
 }
 
-pub(crate) trait CurrentUserTrait {
+pub(crate) trait CurrentUserTrait: Send + Sync + 'static {
     fn username(&self) -> String;
+    fn set_user_name(&mut self, username: String);
 }
 
 #[derive(Clone)]
-pub(crate) struct CurrentUser {
+pub(crate) struct CurrentUser  {
     username: Option<String>,
 }
 
@@ -26,5 +25,9 @@ impl CurrentUser {
 impl CurrentUserTrait for CurrentUser {
     fn username(&self) -> String {
         (&self.username.clone().unwrap()).to_string()
+    }
+
+    fn set_user_name(&mut self, username: String) {
+        self.username = Some(username);
     }
 }
