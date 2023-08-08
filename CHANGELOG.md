@@ -1,3 +1,9 @@
+## [1.0.11](https://github.com/averichev/veruna/compare/v1.0.10...v1.0.11) (2023-08-08)
+
+### Code Refactoring
+
+- Admin API middleware ([3f35ec0](https://github.com/averichev/veruna/commit/3f35ec002ff17413617ef47fbfdccd0387b45a35))
+
 ## [1.0.10](https://github.com/averichev/veruna/compare/v1.0.9...v1.0.10) (2023-08-08)
 
 ### Build System
