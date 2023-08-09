@@ -1,12 +1,11 @@
 use std::sync::{Arc, Mutex};
 use actix_web::{HttpResponse, Responder};
 use actix_web::web::Data;
-use actix_web_validator::Json;
 use hmac::digest::KeyInit;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 use crate::AppState;
-use crate::models::{CurrentUser, CurrentUserTrait};
+use crate::models::CurrentUserTrait;
 
 #[derive(Deserialize, Validate)]
 pub(crate) struct CurrentUserRequest {

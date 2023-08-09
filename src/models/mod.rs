@@ -24,10 +24,13 @@ impl CurrentUser {
 
 impl CurrentUserTrait for CurrentUser {
     fn username(&self) -> String {
-        (&self.username.clone().unwrap()).to_string()
+        let result = (&self.username.clone().unwrap()).to_string();
+        println!("get username, {}", result);
+        result
     }
 
     fn set_user_name(&mut self, username: String) {
+        println!("set_user_name, {}", username);
         self.username = Some(username);
     }
 }
