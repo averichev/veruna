@@ -1,3 +1,13 @@
+## [1.0.13](https://github.com/averichev/veruna/compare/v1.0.12...v1.0.13) (2023-08-09)
+
+### Chores
+
+- Redundant file removed ([582e86f](https://github.com/averichev/veruna/commit/582e86f4f0de992c10f1a23fe7cdac878c8d62fb))
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' ([8d51774](https://github.com/averichev/veruna/commit/8d51774f7c721fff75757130eca84bf0a15fe0dd))
+
 ## [1.0.12](https://github.com/averichev/veruna/compare/v1.0.11...v1.0.12) (2023-08-09)
 
 ### Bug Fixes
