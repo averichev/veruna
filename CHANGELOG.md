@@ -1,3 +1,9 @@
+## [1.0.12](https://github.com/averichev/veruna/compare/v1.0.11...v1.0.12) (2023-08-09)
+
+### Bug Fixes
+
+- Mutable data in middleware ([e9208a2](https://github.com/averichev/veruna/commit/e9208a22da5721bbf8e2c4df5d70970ffa8451a4))
+
 ## [1.0.11](https://github.com/averichev/veruna/compare/v1.0.10...v1.0.11) (2023-08-08)
 
 ### Code Refactoring
