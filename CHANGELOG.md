@@ -1,3 +1,13 @@
+## [1.1.1](https://github.com/averichev/veruna/compare/v1.1.0...v1.1.1) (2023-08-14)
+
+### Improvements
+
+- Id in user list ([8feb9fd](https://github.com/averichev/veruna/commit/8feb9fd2e52c0e06edc276d6940121bfd94d6836))
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' ([05cac72](https://github.com/averichev/veruna/commit/05cac72ff94a40cd9a5c98bf2695ce0a719092bd))
+
 # [1.1.0](https://github.com/averichev/veruna/compare/v1.0.13...v1.1.0) (2023-08-14)
 
 ### Features
