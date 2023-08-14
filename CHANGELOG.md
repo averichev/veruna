@@ -1,3 +1,9 @@
+# [1.1.0](https://github.com/averichev/veruna/compare/v1.0.13...v1.1.0) (2023-08-14)
+
+### Features
+
+- User list ([45071b5](https://github.com/averichev/veruna/commit/45071b5ef7bd6e182eafbdad77be831acdb234ec))
+
 ## [1.0.13](https://github.com/averichev/veruna/compare/v1.0.12...v1.0.13) (2023-08-09)
 
 ### Chores
