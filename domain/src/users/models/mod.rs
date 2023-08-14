@@ -1,2 +1,1 @@
-pub mod claims;
-
+pub(crate) mod claims;

@@ -2,6 +2,7 @@ pub mod user_id;
 pub mod errors;
 pub mod events;
 pub mod models;
+pub mod user_list;
 
 use std::sync::Arc;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
@@ -16,6 +17,7 @@ use crate::users::events::{AfterRegisterUserEvent, UserEventsContainer, UsrEvent
 use crate::users::errors::{LoginError, RegisterUserError};
 use crate::users::models::claims::{Claims, ClaimsTrait};
 use crate::users::user_id::UserId;
+use crate::users::user_list::UserListTrait;
 
 #[async_trait(? Send)]
 pub trait UsersRepository: Send {
@@ -26,6 +28,7 @@ pub trait UsersRepository: Send {
     async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataError>>;
     async fn add_user(&self, username: String) -> Result<UserId, Box<dyn DataError>>;
     async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataError>>;
+    async fn list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DataError>>;
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -57,6 +60,7 @@ pub trait UserKitContract {
     async fn create_admin(&mut self, username: String);
     fn events(self) -> Arc<UserEventsContainer>;
     async fn verify_user_password(&self, user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainError>>;
+    async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainError>>;
 }
 
 pub(crate) struct UserKit {
@@ -152,6 +156,11 @@ impl UserKitContract for UserKit {
                 }
             }
         }
+    }
+
+    async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainError>> {
+        let list = self.repository.lock().await.list().await.unwrap();
+        Ok(list)
     }
 }
 

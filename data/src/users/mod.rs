@@ -1,5 +1,6 @@
 use std::sync::{Arc};
 use async_trait::async_trait;
+use linq::iter::Enumerable;
 use serde::Deserialize;
 use surrealdb::engine::local::Db;
 use surrealdb::Surreal;
@@ -9,6 +10,7 @@ use veruna_domain::{DataError, RecordId};
 use veruna_domain::roles::{Role, RoleId};
 use veruna_domain::users::{AddUser, RegisterUser, User, UsersRepository as UsersRepositoryContract};
 use veruna_domain::users::user_id::UserId;
+use veruna_domain::users::user_list::{UserList, UserListItem, UserListItemTrait, UserListTrait};
 
 #[derive(Debug)]
 pub(crate) struct UsersRepository {
@@ -134,5 +136,17 @@ impl UsersRepositoryContract for UsersRepository {
         let roles: Vec<Role> = response.take(0)
             .unwrap();
         Ok(roles)
+    }
+
+    async fn list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DataError>> {
+        let mut response = self.connection
+            .query("SELECT * FROM users")
+            .await
+            .unwrap();
+        let users: Vec<UserEntity> = response.take(0).unwrap();
+        let result: Vec<Box<dyn UserListItemTrait>> = users.iter()
+            .select(|n| UserListItem::new((&n.username).to_string()))
+            .collect();
+        Ok(UserList::new(result))
     }
 }

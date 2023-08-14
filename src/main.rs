@@ -278,6 +278,7 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/api/protected")
                     .wrap(AdminApi::new(current_user_arc.clone()))
                     .route("get-current-user/", web::post().to(handlers::get_current_user::handle_form_data))
+                    .route("user/list/", web::post().to(handlers::user::list))
             )
             .route("/login/", web::post().to(handlers::login::handle_form_data))
             .route("/register/", web::post().to(handlers::register::register_action))
