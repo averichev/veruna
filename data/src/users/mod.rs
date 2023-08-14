@@ -145,7 +145,7 @@ impl UsersRepositoryContract for UsersRepository {
             .unwrap();
         let users: Vec<UserEntity> = response.take(0).unwrap();
         let result: Vec<Box<dyn UserListItemTrait>> = users.iter()
-            .select(|n| UserListItem::new((&n.username).to_string()))
+            .select(|n| UserListItem::new(n.thing.id.to_string(), n.username.to_string()))
             .collect();
         Ok(UserList::new(result))
     }

@@ -2,22 +2,28 @@ use std::sync::Arc;
 
 pub trait UserListItemTrait {
     fn username(&self) -> String;
+    fn id(&self) -> String;
 }
 
 #[derive(Clone)]
 pub struct UserListItem {
     username: String,
+    id: String
 }
 
 impl UserListItem {
-    pub fn new(username: String) -> Box<dyn UserListItemTrait> {
-        Box::new(UserListItem { username })
+    pub fn new(id: String, username: String) -> Box<dyn UserListItemTrait> {
+        Box::new(UserListItem { username, id })
     }
 }
 
 impl UserListItemTrait for UserListItem {
     fn username(&self) -> String {
         self.username.clone()
+    }
+
+    fn id(&self) -> String {
+        self.id.clone()
     }
 }
 
