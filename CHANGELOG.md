@@ -1,3 +1,9 @@
+## [1.1.3](https://github.com/averichev/veruna/compare/v1.1.2...v1.1.3) (2023-08-15)
+
+### Improvements
+
+- Not delete current user ([0846dc3](https://github.com/averichev/veruna/commit/0846dc3f53860b07c69ce48a2ffd95ba78627d52))
+
 ## [1.1.2](https://github.com/averichev/veruna/compare/v1.1.1...v1.1.2) (2023-08-15)
 
 ### Improvements
