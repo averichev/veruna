@@ -1,3 +1,13 @@
+## [1.1.2](https://github.com/averichev/veruna/compare/v1.1.1...v1.1.2) (2023-08-15)
+
+### Improvements
+
+- Delete user ([2defc9c](https://github.com/averichev/veruna/commit/2defc9c9c32fe326cf7d799c7c9e9d184fa20804))
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' ([cec4fd8](https://github.com/averichev/veruna/commit/cec4fd88c3d5f285e2a9e3971a6f110914b06e28))
+
 ## [1.1.1](https://github.com/averichev/veruna/compare/v1.1.0...v1.1.1) (2023-08-14)
 
 ### Improvements
