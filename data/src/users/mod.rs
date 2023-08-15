@@ -149,4 +149,14 @@ impl UsersRepositoryContract for UsersRepository {
             .collect();
         Ok(UserList::new(result))
     }
+
+    async fn delete(&self, user_id: UserId) -> Result<bool, Box<dyn DataError>> {
+        self.connection
+            .query("DELETE type::thing($table, $id);")
+            .bind(("table", "users"))
+            .bind(("id", user_id.value))
+            .await
+            .unwrap();
+        Ok(true)
+    }
 }

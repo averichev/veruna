@@ -29,6 +29,7 @@ pub trait UsersRepository: Send {
     async fn add_user(&self, username: String) -> Result<UserId, Box<dyn DataError>>;
     async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataError>>;
     async fn list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DataError>>;
+    async fn delete(&self, user_id: UserId) -> Result<bool, Box<dyn DataError>>;
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -61,6 +62,7 @@ pub trait UserKitContract {
     fn events(self) -> Arc<UserEventsContainer>;
     async fn verify_user_password(&self, user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainError>>;
     async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainError>>;
+    async fn delete_user(&self, user_id: String) -> Result<bool, Box<dyn DomainError>>;
 }
 
 pub(crate) struct UserKit {
@@ -161,6 +163,11 @@ impl UserKitContract for UserKit {
     async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainError>> {
         let list = self.repository.lock().await.list().await.unwrap();
         Ok(list)
+    }
+
+    async fn delete_user(&self, user_id: String) -> Result<bool, Box<dyn DomainError>> {
+        let delete = self.repository.lock().await.delete(UserId{ value: user_id }).await.unwrap();
+        Ok(delete)
     }
 }
 
