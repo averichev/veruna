@@ -103,6 +103,7 @@ impl<S, B> Service<ServiceRequest> for AdminApiMiddleware<S>
                     Ok(n) => {
                         println!("все хорошо {}, {}", n.username, token_str.clone());
                         current_user.lock().unwrap().set_user_name(n.username);
+                        current_user.lock().unwrap().set_user_id(n.id);
                         Box::pin(async move {
                             let mut res = svc.call(req).await?;
                             res

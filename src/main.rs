@@ -1,5 +1,3 @@
-#![feature(inherent_associated_types)]
-
 mod uri;
 mod view;
 mod response;
