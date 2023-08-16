@@ -16,10 +16,12 @@ pub(crate) struct CurrentUserRequest {
 #[derive(Serialize)]
 pub(crate) struct CurrentUserResponse {
     username: String,
+    id: String
 }
 
 pub(crate) async fn handle_form_data(app: Data<AppState>, current_user: Data<Arc<Mutex<dyn CurrentUserTrait>>>) -> impl Responder {
+    let cur = current_user.lock().unwrap();
     HttpResponse::Ok().json(
-        CurrentUserResponse { username: current_user.lock().unwrap().username() }
+        CurrentUserResponse { username: cur.username(), id: cur.id() }
     )
 }
