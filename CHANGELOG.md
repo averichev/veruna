@@ -1,3 +1,9 @@
+## [1.1.4](https://github.com/averichev/veruna/compare/v1.1.3...v1.1.4) (2023-08-16)
+
+### Improvements
+
+- Current user endpoint ([b1cce43](https://github.com/averichev/veruna/commit/b1cce435a1dab94b186d9087bf76340318baa3c6))
+
 ## [1.1.3](https://github.com/averichev/veruna/compare/v1.1.2...v1.1.3) (2023-08-15)
 
 ### Improvements
