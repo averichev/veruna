@@ -8,8 +8,8 @@ use surrealdb::sql::Thing;
 use tokio::sync::Mutex;
 use veruna_domain::{DataError, RecordId};
 use veruna_domain::roles::{Role, RoleId};
-use veruna_domain::users::{AddUser, RegisterUser, User, UsersRepository as UsersRepositoryContract};
-use veruna_domain::users::user_id::UserId;
+use veruna_domain::users::{AddUser, CreateUserTrait, RegisterUser, User, UsersRepository as UsersRepositoryContract};
+use veruna_domain::users::user_id::{UserId, UserIdTrait};
 use veruna_domain::users::user_list::{UserList, UserListItem, UserListItemTrait, UserListTrait};
 
 #[derive(Debug)]
@@ -121,6 +121,7 @@ impl UsersRepositoryContract for UsersRepository {
             .create("users")
             .content(AddUser {
                 username,
+                password: "".to_string(),
             })
             .await
             .unwrap();
@@ -158,5 +159,17 @@ impl UsersRepositoryContract for UsersRepository {
             .await
             .unwrap();
         Ok(true)
+    }
+
+    async fn create(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DataError>> {
+        let record: UserEntity = self.connection
+            .create("users")
+            .content(AddUser {
+                username: user.username(),
+                password: "".to_string(),
+            })
+            .await
+            .unwrap();
+        Ok(Arc::new(UserId { value: record.thing.id.to_string() }))
     }
 }

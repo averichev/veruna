@@ -16,7 +16,7 @@ use crate::roles::{Role, RoleId};
 use crate::users::events::{AfterRegisterUserEvent, UserEventsContainer, UsrEvents};
 use crate::users::errors::{LoginError, RegisterUserError};
 use crate::users::models::claims::{Claims, ClaimsTrait};
-use crate::users::user_id::UserId;
+use crate::users::user_id::{UserId, UserIdTrait};
 use crate::users::user_list::UserListTrait;
 
 #[async_trait(? Send)]
@@ -30,6 +30,7 @@ pub trait UsersRepository: Send {
     async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataError>>;
     async fn list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DataError>>;
     async fn delete(&self, user_id: UserId) -> Result<bool, Box<dyn DataError>>;
+    async fn create(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DataError>>;
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -42,6 +43,7 @@ pub struct User {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AddUser {
     pub username: String,
+    pub password: String
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -55,6 +57,10 @@ pub struct LoginUser {
     pub password: String,
 }
 
+pub trait CreateUserTrait {
+    fn username(&self) ->String;
+}
+
 #[async_trait(? Send)]
 pub trait UserKitContract {
     async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>>;
@@ -63,6 +69,7 @@ pub trait UserKitContract {
     async fn verify_user_password(&self, user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainError>>;
     async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainError>>;
     async fn delete_user(&self, user_id: String) -> Result<bool, Box<dyn DomainError>>;
+    async fn create_user(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DomainError>>;
 }
 
 pub(crate) struct UserKit {
@@ -168,6 +175,11 @@ impl UserKitContract for UserKit {
     async fn delete_user(&self, user_id: String) -> Result<bool, Box<dyn DomainError>> {
         let delete = self.repository.lock().await.delete(UserId{ value: user_id }).await.unwrap();
         Ok(delete)
+    }
+
+    async fn create_user(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DomainError>> {
+        let create = self.repository.lock().await.create(user).await.unwrap();
+        Ok(create)
     }
 }
 

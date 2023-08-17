@@ -27,7 +27,7 @@ impl Migration {
             .query("
                 DEFINE TABLE users SCHEMAFULL;
                 DEFINE FIELD username ON TABLE users TYPE string;
-                DEFINE FIELD password ON TABLE users TYPE string;
+                DEFINE FIELD password ON TABLE users TYPE string ASSERT $value != NONE;
                 DEFINE INDEX unique_username ON TABLE users COLUMNS username UNIQUE;
             ")
             .query("
