@@ -1,3 +1,13 @@
+## [1.1.5](https://github.com/averichev/veruna/compare/v1.1.4...v1.1.5) (2023-08-17)
+
+### Improvements
+
+- Create user ([21ca8f1](https://github.com/averichev/veruna/commit/21ca8f1d6e3de33c7ecc6d0ad30e57d9e1269326))
+
+### Other
+
+- Merge branch 'master' of https://github.com/averichev/veruna ([309c14c](https://github.com/averichev/veruna/commit/309c14c1bd6465b57e0c267713097a88b5c29120))
+
 ## [1.1.4](https://github.com/averichev/veruna/compare/v1.1.3...v1.1.4) (2023-08-16)
 
 ### Improvements
