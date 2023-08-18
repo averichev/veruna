@@ -1,3 +1,13 @@
+## [1.1.7](https://github.com/averichev/veruna/compare/v1.1.6...v1.1.7) (2023-08-18)
+
+### Improvements
+
+- Page list ([4b65ab0](https://github.com/averichev/veruna/commit/4b65ab0bc57db09c17a1386bdb9bf19f80e34481))
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' ([814c33b](https://github.com/averichev/veruna/commit/814c33b2af139f94937a863ad38cac10073e9e2c))
+
 ## [1.1.6](https://github.com/averichev/veruna/compare/v1.1.5...v1.1.6) (2023-08-18)
 
 ### Improvements
