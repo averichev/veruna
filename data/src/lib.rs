@@ -3,6 +3,7 @@ pub(crate) mod site;
 mod users;
 mod role;
 pub mod migration;
+mod page;
 
 use std::ops::Deref;
 use std::sync::{Arc,};
@@ -14,7 +15,9 @@ use std::borrow::Borrow;
 use surrealdb::Surreal;
 use surrealdb::engine::local::Db;
 use tokio::sync::Mutex;
+use veruna_domain::pages::PageRepositoryTrait;
 use veruna_domain::roles::RolesRepository as RolesRepositoryTrait;
+use crate::page::PageRepository;
 use crate::site::SiteRepositoryImpl;
 use crate::users::UsersRepository;
 use crate::role::RolesRepository;
@@ -48,6 +51,10 @@ impl veruna_domain::input::Repositories for Repositories {
 
     fn roles(&self) -> Arc<Mutex<dyn RolesRepositoryTrait>> {
         RolesRepository::new(self.connection.clone())
+    }
+
+    fn pages(&self) -> Arc<Mutex<dyn PageRepositoryTrait>> {
+        PageRepository::new(self.connection.clone())
     }
 }
 

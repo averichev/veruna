@@ -4,6 +4,7 @@ use std::fmt;
 use std::sync::{Arc};
 use async_trait::async_trait;
 use crate::input::Repositories;
+use crate::pages::{PageKit, PageKitTrait};
 use crate::sites::site_kit::{SiteKit, SiteKitFactory};
 use crate::users::{UserKit, UserKitContract};
 use crate::users::events::{UserEventsContainer};
@@ -19,6 +20,7 @@ pub mod roles;
 pub trait DomainEntryTrait: Send + Sync {
     fn site_kit(&self) -> Box<dyn SiteKit>;
     fn user_kit(&self) -> Box<dyn UserKitContract>;
+    fn page_kit(&self) -> Arc<dyn PageKitTrait>;
 }
 
 pub struct DomainEvents {
@@ -65,6 +67,12 @@ impl DomainEntryTrait for DomainEntry {
         let repository = repositories.users();
         let events = Arc::clone(&self.events.users);
         Box::new(UserKit::new(repository, events))
+    }
+
+    fn page_kit(&self) -> Arc<dyn PageKitTrait> {
+        let repositories = &self.repositories;
+        let repository = repositories.pages();
+        PageKit::new(repository)
     }
 }
 

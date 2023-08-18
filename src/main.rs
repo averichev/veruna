@@ -280,6 +280,7 @@ async fn main() -> std::io::Result<()> {
                     .route("user/{user_id}/delete/", web::delete().to(handlers::user::delete))
                     .route("user/create/", web::post().to(handlers::user::create))
                     .route("site/list/", web::get().to(handlers::site::list))
+                    .route("page/list/", web::get().to(handlers::site::list))
             )
             .route("/login/", web::post().to(handlers::login::handle_form_data))
             .route("/register/", web::post().to(handlers::register::register_action))

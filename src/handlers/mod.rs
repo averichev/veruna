@@ -5,3 +5,4 @@ pub(crate) mod get_current_user;
 pub(crate) mod admin;
 pub(crate) mod user;
 pub(crate) mod site;
+pub(crate) mod page;
