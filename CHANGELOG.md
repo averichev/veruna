@@ -1,3 +1,9 @@
+## [1.1.6](https://github.com/averichev/veruna/compare/v1.1.5...v1.1.6) (2023-08-18)
+
+### Improvements
+
+- Site list ([2f7d611](https://github.com/averichev/veruna/commit/2f7d61198e8ae7567e7ab81041348741156495b3))
+
 ## [1.1.5](https://github.com/averichev/veruna/compare/v1.1.4...v1.1.5) (2023-08-17)
 
 ### Improvements
