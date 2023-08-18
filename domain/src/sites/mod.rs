@@ -89,6 +89,7 @@ pub enum SiteReadOption {
 }
 
 pub trait Site {
+    fn id(&self) -> String;
     fn domain(&self) -> String;
     fn name(&self) -> String;
     fn description(&self) -> String;
@@ -96,14 +97,16 @@ pub trait Site {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SiteImpl {
+    pub id: String,
     pub domain: String,
     pub name: String,
     pub description: String,
 }
 
 impl SiteImpl {
-    pub fn new(domain: String, name: String, description: String) -> Box<dyn Site> {
+    pub fn new(domain: String, name: String, description: String, id: String) -> Box<dyn Site> {
         Box::new(SiteImpl {
+            id,
             domain,
             name,
             description,
@@ -113,6 +116,10 @@ impl SiteImpl {
 }
 
 impl Site for SiteImpl {
+    fn id(&self) -> String {
+        self.id.clone()
+    }
+
     fn domain(&self) -> String {
         self.domain.clone()
     }

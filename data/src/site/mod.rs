@@ -29,6 +29,7 @@ impl SiteRepositoryImpl {
         let record: Record = self.connection
             .create("sites")
             .content(SiteImpl {
+                id: "".to_string(),
                 domain: "localhost".to_string(),
                 name: "Test site".to_string(),
                 description: "Test site".to_string(),
@@ -136,10 +137,7 @@ impl SiteRepository for SiteRepositoryImpl {
             .unwrap();
         let sites: Option<SiteEntity> = response.take(0).unwrap();
         let result: Vec<Box<dyn Site>> = sites.iter()
-            .select(|n| SiteImpl::new(
-                (&n.domain).to_string(),
-                "".to_string(),
-                "".to_string())
+            .select(|n| SiteImpl::new(n.domain.to_string(), n.name.to_string(), n.description.to_string(), n.thing.id.to_string())
             )
             .collect();
         Arc::new(result)
@@ -152,4 +150,6 @@ struct SiteEntity {
     #[serde(rename(deserialize = "id"))]
     thing: Thing,
     domain: String,
+    name: String,
+    description: String
 }

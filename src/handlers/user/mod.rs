@@ -4,7 +4,6 @@ use std::sync::{Arc, Mutex};
 use actix_web::{HttpResponse, Responder, web};
 use actix_web::web::Data;
 use actix_web_validator::Json;
-use veruna_domain::users::user_id::UserId;
 use crate::AppState;
 use crate::handlers::user::models::{CreateUserRequest, CreateUserResponse, DeleteUserRequest, UserList};
 use crate::models::CurrentUserTrait;
