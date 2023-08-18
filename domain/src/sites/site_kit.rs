@@ -3,48 +3,37 @@ use async_trait::async_trait;
 use url::{ParseError, Url};
 use log;
 use log::info;
-use crate::sites::{Reader, Site, SiteBuilder, SiteBuilderImpl, SiteId, SiteIdBuilder, SiteIdBuilderImpl, SiteReader, SiteReadOption, SiteRepository};
+use tokio::sync::Mutex;
+use crate::DomainErrorTrait;
+use crate::sites::{Reader, SiteTrait, SiteBuilder, SiteBuilderImpl, SiteId, SiteIdBuilder, SiteIdBuilderImpl, SiteReader, SiteReadOption, SiteRepositoryTrait};
 
 #[async_trait(? Send)]
-pub trait SiteKit {
-    async fn create(&mut self, site: Box<dyn Site>) -> Box<dyn SiteId>;
-    async fn get_site(&self, url: Result<Url, ParseError>) -> Option<(Arc<dyn Site>, Box<dyn SiteId>)>;
-    fn reader(&self) -> Box<dyn Reader + '_>;
+pub trait SiteKitTrait {
+    async fn create(&mut self, site: Box<dyn SiteTrait>) -> Box<dyn SiteId>;
+    async fn get_site(&self, url: Url) -> Result<Option<Arc<dyn SiteTrait>>, Arc<dyn DomainErrorTrait>>;
     fn site_id_builder(&self) -> Box<dyn SiteIdBuilder>;
     fn site_builder(&self) -> Box<dyn SiteBuilder>;
-    async fn list(&self) -> Arc<Vec<Box<dyn Site>>>;
+    async fn list(&self) -> Arc<Vec<Box<dyn SiteTrait>>>;
 }
 
-struct SiteKitImpl {
-    site_repository: Box<dyn SiteRepository>,
+struct SiteKit {
+    site_repository: Arc<Mutex<dyn SiteRepositoryTrait>>,
 }
 
 #[async_trait(? Send)]
-impl SiteKit for SiteKitImpl {
-    async fn create(&mut self, site: Box<dyn Site>) -> Box<dyn SiteId> {
-        let result = self.site_repository.create(site).await;
+impl SiteKitTrait for SiteKit {
+    async fn create(&mut self, site: Box<dyn SiteTrait>) -> Box<dyn SiteId> {
+        let result = self.site_repository.lock().await.create(site).await;
         result
     }
 
-    async fn get_site(&self, url: Result<Url, ParseError>) -> Option<(Arc<dyn Site>, Box<dyn SiteId>)> {
-        match url {
-            Ok(u) => {
-                let domain = u.host().unwrap().to_string();
-                info!("{}", domain);
-                let site = self.site_repository
-                    .read(SiteReadOption::Domain(domain))
-                    .await;
-                site
-            }
-            Err(_) => {
-                None
-            }
-        }
-    }
-
-    fn reader(&self) -> Box<dyn Reader + '_> {
-        let repo = &self.site_repository;
-        SiteReader::new(repo)
+    async fn get_site(&self, url: Url) -> Result<Option<Arc<dyn SiteTrait>>, Arc<dyn DomainErrorTrait>> {
+        let domain = url.host().unwrap().to_string();
+        let site = self.site_repository.lock().await
+            .read(SiteReadOption::Domain(domain))
+            .await
+            .unwrap();
+        Ok(site)
     }
 
     fn site_id_builder(&self) -> Box<dyn SiteIdBuilder> {
@@ -57,8 +46,8 @@ impl SiteKit for SiteKitImpl {
         result
     }
 
-    async fn list(&self) -> Arc<Vec<Box<dyn Site>>> {
-        let list = self.site_repository.list().await;
+    async fn list(&self) -> Arc<Vec<Box<dyn SiteTrait>>> {
+        let list = self.site_repository.lock().await.list().await;
         list
     }
 }
@@ -66,8 +55,8 @@ impl SiteKit for SiteKitImpl {
 pub struct SiteKitFactory;
 
 impl SiteKitFactory {
-    pub fn build(repo: Box<dyn SiteRepository>) -> Box<dyn SiteKit> {
-        let result: Box<dyn SiteKit> = Box::new(SiteKitImpl { site_repository: repo });
+    pub fn build(repo: Arc<Mutex<dyn SiteRepositoryTrait>>) -> Box<dyn SiteKitTrait> {
+        let result: Box<dyn SiteKitTrait> = Box::new(SiteKit { site_repository: repo });
         result
     }
 }

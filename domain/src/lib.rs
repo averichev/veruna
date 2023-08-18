@@ -5,7 +5,7 @@ use std::sync::{Arc};
 use async_trait::async_trait;
 use crate::input::Repositories;
 use crate::pages::{PageKit, PageKitTrait};
-use crate::sites::site_kit::{SiteKit, SiteKitFactory};
+use crate::sites::site_kit::{SiteKitTrait, SiteKitFactory};
 use crate::users::{UserKit, UserKitContract};
 use crate::users::events::{UserEventsContainer};
 
@@ -18,7 +18,7 @@ pub mod roles;
 
 #[async_trait(? Send)]
 pub trait DomainEntryTrait: Send + Sync {
-    fn site_kit(&self) -> Box<dyn SiteKit>;
+    fn site_kit(&self) -> Box<dyn SiteKitTrait>;
     fn user_kit(&self) -> Box<dyn UserKitContract>;
     fn page_kit(&self) -> Arc<dyn PageKitTrait>;
 }
@@ -55,7 +55,7 @@ impl DomainEntry {
 
 #[async_trait(? Send)]
 impl DomainEntryTrait for DomainEntry {
-    fn site_kit(&self) -> Box<dyn SiteKit> {
+    fn site_kit(&self) -> Box<dyn SiteKitTrait> {
         let repositories = &self.repositories;
         let repo = repositories.site();
         let site_kit = SiteKitFactory::build(repo);
@@ -76,11 +76,11 @@ impl DomainEntryTrait for DomainEntry {
     }
 }
 
-pub trait DomainError: fmt::Debug {
+pub trait DomainErrorTrait: fmt::Debug {
     fn message(&self) -> String;
 }
 
-pub trait DataError: fmt::Debug {
+pub trait DataErrorTrait: fmt::Debug {
     fn message(&self) -> String;
 }
 

@@ -8,8 +8,8 @@ mod page;
 use std::ops::Deref;
 use std::sync::{Arc,};
 use async_trait::async_trait;
-use veruna_domain::sites::{Site, SiteBuilder, SiteId, SiteRepository as SiteRepositoryContract};
-use veruna_domain::{RecordId as RecordIdTrait, DataError as DataErrorTrait};
+use veruna_domain::sites::{SiteTrait, SiteBuilder, SiteId, SiteRepositoryTrait as SiteRepositoryContract, SiteRepositoryTrait};
+use veruna_domain::{RecordId as RecordIdTrait, DataErrorTrait as DataErrorTrait};
 use veruna_domain::nodes::NodesRepository;
 use std::borrow::Borrow;
 use surrealdb::Surreal;
@@ -18,7 +18,7 @@ use tokio::sync::Mutex;
 use veruna_domain::pages::PageRepositoryTrait;
 use veruna_domain::roles::RolesRepository as RolesRepositoryTrait;
 use crate::page::PageRepository;
-use crate::site::SiteRepositoryImpl;
+use crate::site::SiteRepository;
 use crate::users::UsersRepository;
 use crate::role::RolesRepository;
 
@@ -37,8 +37,8 @@ impl Repositories {
 
 #[async_trait(? Send)]
 impl veruna_domain::input::Repositories for Repositories {
-    fn site(&self) -> Box<dyn SiteRepositoryContract> {
-        SiteRepositoryImpl::new(self.connection.clone())
+    fn site(&self) -> Arc<Mutex<dyn SiteRepositoryTrait>> {
+        SiteRepository::new(self.connection.clone())
     }
 
     async fn nodes(&self) -> Box<dyn NodesRepository> {

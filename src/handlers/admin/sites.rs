@@ -26,7 +26,7 @@ pub(crate) struct SiteListResponse {
 }
 
 impl SiteListResponse {
-    fn new(list: Arc<Vec<Box<dyn veruna_domain::sites::Site>>>) -> SiteListResponse {
+    fn new(list: Arc<Vec<Box<dyn veruna_domain::sites::SiteTrait>>>) -> SiteListResponse {
         let result: Vec<Site> = list.iter().select(|n| Site { domain: n.domain() }).collect();
         SiteListResponse{ list: result }
     }

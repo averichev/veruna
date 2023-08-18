@@ -5,18 +5,19 @@ use crate::pages::PageId;
 use async_trait::async_trait;
 use serde::Serialize;
 use serde::Deserialize;
-use crate::sites::site_kit::SiteKit;
+use crate::DataErrorTrait;
+use crate::sites::site_kit::SiteKitTrait;
 
 #[async_trait(? Send)]
-pub trait SiteRepository {
-    async fn create(&mut self, site: Box<dyn Site>) -> Box<dyn SiteId>;
-    async fn read(&self, read_by: SiteReadOption) -> Option<(Arc<dyn Site>, Box<dyn SiteId>)>;
+pub trait SiteRepositoryTrait {
+    async fn create(&mut self, site: Box<dyn SiteTrait>) -> Box<dyn SiteId>;
+    async fn read(&self, read_by: SiteReadOption) -> Result<Option<Arc<dyn SiteTrait>>, Arc<dyn DataErrorTrait>>;
     async fn delete(&self, site_id: Box<dyn SiteId>) -> bool;
-    async fn list(&self) -> Arc<Vec<Box<dyn Site>>>;
+    async fn list(&self) -> Arc<Vec<Box<dyn SiteTrait>>>;
 }
 
 pub trait CreatedSite {
-    fn site(&self) -> dyn Site;
+    fn site(&self) -> dyn SiteTrait;
     fn site_id(&self) -> Box<dyn SiteId>;
 }
 
@@ -43,28 +44,28 @@ impl SiteIdBuilder for SiteIdBuilderImpl {
 
 
 pub trait Reader {
-    fn read(&self, site_id: Box<dyn SiteId>) -> Box<dyn Site>;
+    fn read(&self, site_id: Box<dyn SiteId>) -> Box<dyn SiteTrait>;
 }
 
 pub struct SiteReader<'a> {
-    site_repository: &'a Box<dyn SiteRepository>,
+    site_repository: &'a Box<dyn SiteRepositoryTrait>,
 }
 
 impl SiteReader<'_> {
-    fn new(site_repository: &Box<dyn SiteRepository>) -> Box<dyn Reader + '_> {
+    fn new(site_repository: &Box<dyn SiteRepositoryTrait>) -> Box<dyn Reader + '_> {
         Box::new(SiteReader { site_repository })
     }
 }
 
 impl Reader for SiteReader<'_> {
-    fn read(&self, site_id: Box<dyn SiteId>) -> Box<dyn Site> {
+    fn read(&self, site_id: Box<dyn SiteId>) -> Box<dyn SiteTrait> {
         todo!()
     }
 }
 
 
 pub trait SiteBuilder {
-    fn build(&self, site: SiteImpl) -> Box<dyn Site>;
+    fn build(&self, site: Site) -> Box<dyn SiteTrait>;
 }
 
 pub struct SiteBuilderImpl;
@@ -77,8 +78,8 @@ impl SiteBuilderImpl {
 }
 
 impl SiteBuilder for SiteBuilderImpl {
-    fn build(&self, site: SiteImpl) -> Box<dyn Site> {
-        let result: Box<dyn Site> = Box::new(site);
+    fn build(&self, site: Site) -> Box<dyn SiteTrait> {
+        let result: Box<dyn SiteTrait> = Box::new(site);
         result
     }
 }
@@ -88,7 +89,7 @@ pub enum SiteReadOption {
     Domain(String),
 }
 
-pub trait Site {
+pub trait SiteTrait {
     fn id(&self) -> String;
     fn domain(&self) -> String;
     fn name(&self) -> String;
@@ -96,26 +97,26 @@ pub trait Site {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct SiteImpl {
+pub struct Site {
     pub id: String,
     pub domain: String,
     pub name: String,
     pub description: String,
 }
 
-impl SiteImpl {
-    pub fn new(domain: String, name: String, description: String, id: String) -> Box<dyn Site> {
-        Box::new(SiteImpl {
+impl Site {
+    pub fn new(domain: String, name: String, description: String, id: String) -> Box<dyn SiteTrait> {
+        let site = Site {
             id,
             domain,
             name,
             description,
-        }
-        )
+        };
+        Box::new(site)
     }
 }
 
-impl Site for SiteImpl {
+impl SiteTrait for Site {
     fn id(&self) -> String {
         self.id.clone()
     }

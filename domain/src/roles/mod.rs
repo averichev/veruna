@@ -3,14 +3,14 @@ use std::thread;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
-use crate::DataError;
+use crate::DataErrorTrait;
 use crate::users::events::{AfterRegisterUserEvent, UserEventsContainer};
 use crate::users::UsersRepository;
 
 
 #[async_trait(? Send)]
 pub trait RolesRepository: Send {
-    async fn get_role_id(&self, role_name: String) -> Result<Option<RoleId>, Box<dyn DataError>>;
+    async fn get_role_id(&self, role_name: String) -> Result<Option<RoleId>, Box<dyn DataErrorTrait>>;
 }
 
 #[derive(Serialize, Deserialize, Clone)]

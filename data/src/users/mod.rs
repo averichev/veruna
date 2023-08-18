@@ -6,7 +6,7 @@ use surrealdb::engine::local::Db;
 use surrealdb::Surreal;
 use surrealdb::sql::Thing;
 use tokio::sync::Mutex;
-use veruna_domain::{DataError, RecordId};
+use veruna_domain::{DataErrorTrait, RecordId};
 use veruna_domain::roles::{Role, RoleId};
 use veruna_domain::users::{AddUser, CreateUserTrait, RegisterUser, User, UsersRepository as UsersRepositoryContract};
 use veruna_domain::users::user_id::{UserId, UserIdTrait};
@@ -39,7 +39,7 @@ impl UsersRepository {
 
 #[async_trait(? Send)]
 impl UsersRepositoryContract for UsersRepository {
-    async fn register_user(&mut self, user: RegisterUser) -> Result<UserId, Box<dyn DataError>> {
+    async fn register_user(&mut self, user: RegisterUser) -> Result<UserId, Box<dyn DataErrorTrait>> {
         let record: UserEntity = self.connection
             .create("users")
             .content(user)
@@ -60,7 +60,7 @@ impl UsersRepositoryContract for UsersRepository {
         }
     }
 
-    async fn count_users(&mut self) -> Result<u32, Box<dyn DataError>> {
+    async fn count_users(&mut self) -> Result<u32, Box<dyn DataErrorTrait>> {
         let mut response = self.connection
             .query("SELECT value count FROM (SELECT count() as count FROM users GROUP BY count)")
             .await
@@ -70,7 +70,7 @@ impl UsersRepositoryContract for UsersRepository {
         Ok(*result)
     }
 
-    async fn add_user_role(&self, user_id: UserId, role_id: RoleId) -> Result<Option<Box<dyn RecordId>>, Box<dyn DataError>> {
+    async fn add_user_role(&self, user_id: UserId, role_id: RoleId) -> Result<Option<Box<dyn RecordId>>, Box<dyn DataErrorTrait>> {
         let mut response = self.connection
             .query("
                 LET $user = type::thing($users_table, $user_id);
@@ -93,7 +93,7 @@ impl UsersRepositoryContract for UsersRepository {
             }
         }
     }
-    async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataError>> {
+    async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataErrorTrait>> {
         let mut response = self.connection
             .query("SELECT * FROM users WHERE username = $username")
             .bind(("username", username))
@@ -116,7 +116,7 @@ impl UsersRepositoryContract for UsersRepository {
         }
     }
 
-    async fn add_user(&self, username: String) -> Result<UserId, Box<dyn DataError>> {
+    async fn add_user(&self, username: String) -> Result<UserId, Box<dyn DataErrorTrait>> {
         let record: Record = self.connection
             .create("users")
             .content(AddUser {
@@ -127,7 +127,7 @@ impl UsersRepositoryContract for UsersRepository {
             .unwrap();
         Ok(UserId { value: record.thing.id.to_string() })
     }
-    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataError>> {
+    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataErrorTrait>> {
         let mut response = self.connection
             .query("SELECT ->has_roles->roles.* as roles FROM type::thing($table, $id);")
             .bind(("table", "roles"))
@@ -139,7 +139,7 @@ impl UsersRepositoryContract for UsersRepository {
         Ok(roles)
     }
 
-    async fn list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DataError>> {
+    async fn list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DataErrorTrait>> {
         let mut response = self.connection
             .query("SELECT * FROM users")
             .await
@@ -151,7 +151,7 @@ impl UsersRepositoryContract for UsersRepository {
         Ok(UserList::new(result))
     }
 
-    async fn delete(&self, user_id: UserId) -> Result<bool, Box<dyn DataError>> {
+    async fn delete(&self, user_id: UserId) -> Result<bool, Box<dyn DataErrorTrait>> {
         self.connection
             .query("DELETE type::thing($table, $id);")
             .bind(("table", "users"))
@@ -161,7 +161,7 @@ impl UsersRepositoryContract for UsersRepository {
         Ok(true)
     }
 
-    async fn create(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DataError>> {
+    async fn create(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DataErrorTrait>> {
         let record: UserEntity = self.connection
             .create("users")
             .content(AddUser {

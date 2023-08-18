@@ -1,16 +1,17 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc};
 use surrealdb::engine::local::Db;
 use surrealdb::{Error, Surreal};
-use veruna_domain::sites::{Site, SiteId, SiteIdBuilder, SiteIdBuilderImpl, SiteImpl, SiteReadOption, SiteRepository};
+use veruna_domain::sites::{SiteTrait, SiteId, Site, SiteReadOption, SiteRepositoryTrait};
 use async_trait::async_trait;
 use linq::iter::Enumerable;
 use serde::Deserialize;
 use surrealdb::sql::Thing;
+use tokio::sync::Mutex;
 use crate::SiteRepositoryContract;
 
-pub(crate) struct SiteRepositoryImpl {
-    sites: HashMap<u8, Box<dyn Site>>,
+pub(crate) struct SiteRepository {
+    sites: HashMap<u8, Box<dyn SiteTrait>>,
     connection: Arc<Surreal<Db>>,
 }
 
@@ -20,15 +21,15 @@ struct Record {
     id: Thing,
 }
 
-impl SiteRepositoryImpl {
-    pub fn new(connection: Arc<Surreal<Db>>) -> Box<dyn SiteRepositoryContract> {
-        let result = SiteRepositoryImpl { sites: Default::default(), connection };
-        Box::new(result)
+impl SiteRepository {
+    pub fn new(connection: Arc<Surreal<Db>>) -> Arc<Mutex<dyn SiteRepositoryTrait>> {
+        let result = SiteRepository { sites: Default::default(), connection };
+        Arc::new(Mutex::new(result))
     }
     async fn insert_site(&self) -> Result<Thing, Error> {
         let record: Record = self.connection
             .create("sites")
-            .content(SiteImpl {
+            .content(Site {
                 id: "".to_string(),
                 domain: "localhost".to_string(),
                 name: "Test site".to_string(),
@@ -37,15 +38,13 @@ impl SiteRepositoryImpl {
             .await?;
         Ok(record.id)
     }
-    async fn find_site_by_domain(&self, domain: String) -> Result<Option<SiteImpl>, Error> {
+    async fn find_site_by_domain(&self, domain: String) -> Result<Option<SiteEntity>, Error> {
         let mut response = self.connection
             .query("SELECT * FROM sites WHERE domain = $domain")
             .bind(("domain", domain))
             .await?;
-        let sites: Option<SiteImpl> = response.take(0)?;
-        //         let record = sites.get(0).unwrap().clone();
-        //         let site_id = SiteIdBuilderImpl::new().build("dasdasd".to_string());
-        Ok(Some(sites.unwrap().clone()))
+        let site: Option<SiteEntity> = response.take(0)?;
+        Ok(site)
     }
     async fn count_sites(&self) -> Result<usize, Error> {
         let db = self.connection.clone();
@@ -95,33 +94,34 @@ impl SiteRepositoryImpl {
 }
 
 #[async_trait(? Send)]
-impl SiteRepository for SiteRepositoryImpl {
-    async fn create(&mut self, site: Box<dyn Site>) -> Box<dyn SiteId> {
+impl SiteRepositoryTrait for SiteRepository {
+    async fn create(&mut self, site: Box<dyn SiteTrait>) -> Box<dyn SiteId> {
         todo!()
     }
 
-    async fn read(&self, read_by: SiteReadOption) -> Option<(Arc<dyn Site>, Box<dyn SiteId>)> {
-        let count_sites = self.count_sites().await;
-        match count_sites {
-            Ok(count) => {
-                if count == 0 {
-                    self.insert_site().await.unwrap();
-                }
-                let site = self.find_site_by_domain("localhost".to_string())
+    async fn read(&self, read_by: SiteReadOption) -> Result<Option<Arc<dyn SiteTrait>>, Arc<dyn veruna_domain::DataErrorTrait>> {
+        match read_by {
+            SiteReadOption::SiteId(site_id) => {
+                Ok(None)
+            }
+            SiteReadOption::Domain(domain) => {
+                let site_entity = self.find_site_by_domain(domain)
                     .await
                     .unwrap();
-                match site {
+                match site_entity {
                     None => {
-                        None
+                        Ok(None)
                     }
                     Some(n) => {
-                        Some((Arc::new(n), SiteIdBuilderImpl.build("dasdasd".to_string())))
+                        Ok(Some((Arc::new(Site {
+                            id: n.thing.id.to_string(),
+                            domain: n.domain,
+                            name: n.name,
+                            description: n.description,
+                        })))
+                        )
                     }
                 }
-            }
-            Err(e) => {
-                println!("{}", e);
-                None
             }
         }
     }
@@ -130,14 +130,14 @@ impl SiteRepository for SiteRepositoryImpl {
         todo!()
     }
 
-    async fn list(&self) -> Arc<Vec<Box<dyn Site>>> {
+    async fn list(&self) -> Arc<Vec<Box<dyn SiteTrait>>> {
         let mut response = self.connection
             .query("SELECT * FROM sites")
             .await
             .unwrap();
         let sites: Option<SiteEntity> = response.take(0).unwrap();
-        let result: Vec<Box<dyn Site>> = sites.iter()
-            .select(|n| SiteImpl::new(n.domain.to_string(), n.name.to_string(), n.description.to_string(), n.thing.id.to_string())
+        let result: Vec<Box<dyn SiteTrait>> = sites.iter()
+            .select(|n| Site::new(n.domain.to_string(), n.name.to_string(), n.description.to_string(), n.thing.id.to_string())
             )
             .collect();
         Arc::new(result)
@@ -151,5 +151,5 @@ struct SiteEntity {
     thing: Thing,
     domain: String,
     name: String,
-    description: String
+    description: String,
 }

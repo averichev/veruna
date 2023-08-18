@@ -5,7 +5,7 @@ use surrealdb::engine::local::Db;
 use surrealdb::sql::Thing;
 use surrealdb::Surreal;
 use tokio::sync::Mutex;
-use veruna_domain::DataError;
+use veruna_domain::DataErrorTrait;
 use veruna_domain::roles::{RoleId, RolesRepository as RolesRepositoryTrait};
 
 #[derive(Debug, Deserialize)]
@@ -27,7 +27,7 @@ impl RolesRepository {
 
 #[async_trait(? Send)]
 impl RolesRepositoryTrait for RolesRepository {
-    async fn get_role_id(&self, role_name: String) -> Result<Option<RoleId>, Box<dyn DataError>> {
+    async fn get_role_id(&self, role_name: String) -> Result<Option<RoleId>, Box<dyn DataErrorTrait>> {
         let mut response = self.connection
             .query("SELECT id FROM roles WHERE code = $role_name")
             .bind(("role_name", role_name))

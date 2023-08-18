@@ -1,4 +1,4 @@
-use crate::DomainError as DomainErrorTrait;
+use crate::DomainErrorTrait as DomainErrorTrait;
 
 #[derive(Clone, Debug)]
 pub struct RegisterUserError {

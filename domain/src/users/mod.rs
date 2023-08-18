@@ -11,7 +11,7 @@ use argon2::password_hash::SaltString;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
-use crate::{DataError, DomainError, RecordId};
+use crate::{DataErrorTrait, DomainErrorTrait, RecordId};
 use crate::roles::{Role, RoleId};
 use crate::users::events::{AfterRegisterUserEvent, UserEventsContainer, UsrEvents};
 use crate::users::errors::{LoginError, RegisterUserError};
@@ -21,16 +21,16 @@ use crate::users::user_list::UserListTrait;
 
 #[async_trait(? Send)]
 pub trait UsersRepository: Send {
-    async fn register_user(&mut self, user: RegisterUser) -> Result<UserId, Box<dyn DataError>>;
+    async fn register_user(&mut self, user: RegisterUser) -> Result<UserId, Box<dyn DataErrorTrait>>;
     async fn find_user_id_by_username(&mut self, username: String) -> Option<UserId>;
-    async fn count_users(&mut self) -> Result<u32, Box<dyn DataError>>;
-    async fn add_user_role(&self, user_id: UserId, role_id: RoleId) -> Result<Option<Box<dyn RecordId>>, Box<dyn DataError>>;
-    async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataError>>;
-    async fn add_user(&self, username: String) -> Result<UserId, Box<dyn DataError>>;
-    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataError>>;
-    async fn list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DataError>>;
-    async fn delete(&self, user_id: UserId) -> Result<bool, Box<dyn DataError>>;
-    async fn create(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DataError>>;
+    async fn count_users(&mut self) -> Result<u32, Box<dyn DataErrorTrait>>;
+    async fn add_user_role(&self, user_id: UserId, role_id: RoleId) -> Result<Option<Box<dyn RecordId>>, Box<dyn DataErrorTrait>>;
+    async fn find_user_by_username(&self, username: String) -> Result<Option<User>, Box<dyn DataErrorTrait>>;
+    async fn add_user(&self, username: String) -> Result<UserId, Box<dyn DataErrorTrait>>;
+    async fn get_user_roles(&self, username: String) -> Result<Vec<Role>, Box<dyn DataErrorTrait>>;
+    async fn list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DataErrorTrait>>;
+    async fn delete(&self, user_id: UserId) -> Result<bool, Box<dyn DataErrorTrait>>;
+    async fn create(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DataErrorTrait>>;
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -63,13 +63,13 @@ pub trait CreateUserTrait {
 
 #[async_trait(? Send)]
 pub trait UserKitContract {
-    async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>>;
+    async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainErrorTrait>>;
     async fn create_admin(&mut self, username: String);
     fn events(self) -> Arc<UserEventsContainer>;
-    async fn verify_user_password(&self, user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainError>>;
-    async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainError>>;
-    async fn delete_user(&self, user_id: String) -> Result<bool, Box<dyn DomainError>>;
-    async fn create_user(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DomainError>>;
+    async fn verify_user_password(&self, user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainErrorTrait>>;
+    async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainErrorTrait>>;
+    async fn delete_user(&self, user_id: String) -> Result<bool, Box<dyn DomainErrorTrait>>;
+    async fn create_user(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DomainErrorTrait>>;
 }
 
 pub(crate) struct UserKit {
@@ -90,7 +90,7 @@ impl UserKit {
 
 #[async_trait(? Send)]
 impl UserKitContract for UserKit {
-    async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainError>> {
+    async fn register_user(&mut self, username: String, password: String) -> Result<UserId, Box<dyn DomainErrorTrait>> {
         let salt = SaltString::generate(&mut OsRng);
 
         let encoded_password = self.encode_password(password, &salt);
@@ -142,7 +142,7 @@ impl UserKitContract for UserKit {
         self.event_container.clone()
     }
 
-    async fn verify_user_password(&self, login_user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainError>> {
+    async fn verify_user_password(&self, login_user: LoginUser) -> Result<Box<dyn ClaimsTrait>, Box<dyn DomainErrorTrait>> {
         let repository = self.repository.lock().await;
         let user = repository.find_user_by_username(login_user.username).await.unwrap();
         match user {
@@ -167,17 +167,17 @@ impl UserKitContract for UserKit {
         }
     }
 
-    async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainError>> {
+    async fn get_user_list(&self) -> Result<Box<dyn UserListTrait>, Box<dyn DomainErrorTrait>> {
         let list = self.repository.lock().await.list().await.unwrap();
         Ok(list)
     }
 
-    async fn delete_user(&self, user_id: String) -> Result<bool, Box<dyn DomainError>> {
+    async fn delete_user(&self, user_id: String) -> Result<bool, Box<dyn DomainErrorTrait>> {
         let delete = self.repository.lock().await.delete(UserId{ value: user_id }).await.unwrap();
         Ok(delete)
     }
 
-    async fn create_user(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DomainError>> {
+    async fn create_user(&self, user: Arc<dyn CreateUserTrait>) -> Result<Arc<dyn UserIdTrait>, Box<dyn DomainErrorTrait>> {
         let create = self.repository.lock().await.create(user).await.unwrap();
         Ok(create)
     }

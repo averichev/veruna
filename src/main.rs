@@ -25,7 +25,7 @@ use actix_web::{
 use actix_web_validator::JsonConfig;
 use dotenv;
 use veruna_data::Repositories;
-use veruna_domain::sites::{Site, SiteId};
+use veruna_domain::sites::{SiteTrait, SiteId};
 use crate::view::{MainPageView, NodeView};
 use async_trait::async_trait;
 use sailfish::TemplateOnce;
@@ -38,6 +38,7 @@ use surrealdb::opt::Strict;
 use surrealdb::Surreal;
 use termion::{color, style};
 use veruna_domain::{DomainEntry, DomainEntryTrait};
+use veruna_domain::pages::PageTrait;
 use crate::handlers::error_handler::ValidationErrorJsonPayload;
 use crate::middleware::admin_api::AdminApi;
 use crate::middleware::redirect_slash::{RedirectSlash};
@@ -58,11 +59,9 @@ async fn path_test(request: HttpRequest,
 {
     let repo = app.repositories.site();
     let site_kit = SiteKitFactory::build(repo);
-    let uri_parser = uri::UriParser::new(&request);
-    if uri_parser.ends_with_slash() {}
-    let tail: String = request.match_info().get("tail").unwrap().parse().unwrap();
-    let url = uri_parser.parse();
-    let site = site_kit.get_site(url).await;
+    let request_parser = uri::RequestParser::new(&request);
+    let url = request_parser.parse().unwrap();
+    let site = site_kit.get_site(url.clone()).await.unwrap();
     match site {
         None => {
             HttpResponse::from_error(InternalError::new(
@@ -70,38 +69,16 @@ async fn path_test(request: HttpRequest,
                 StatusCode::NOT_FOUND,
             ))
         }
-        Some(n) => {
-            let node_kit = NodeKitFactory::build_node_kit(
-                app.repositories.nodes().await
-            );
-            let path = node_kit
-                .find_path(uri_parser.path.clone())
-                .await;
-            match path {
+        Some(site) => {
+            let page_kit = app.domain.page_kit();
+            let nodes = request_parser.get_nodes();
+            let page = page_kit.read(nodes).await.unwrap();
+            match page {
                 None => {
-                    response::NotFound::new(
-                        format!("not found node {}", uri_parser.path.clone())
-                    )
+                    HttpResponse::NotFound().body(format!("Page not found {}", request_parser.tail()))
                 }
-                Some(node) => {
-                    let view = MainPageView {
-                        title: format!("{}, {}", uri_parser.path, tail),
-                        site: view::Site {
-                            name: n.0.name().to_string(),
-                            description: n.0.description().to_string(),
-                        },
-                        node: NodeView { title: node.title(), path: node.path() },
-                    };
-                    let body = view
-                        .render_once()
-                        .map_err(|e| InternalError::new(
-                            e,
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                        )).unwrap();
-
-                    HttpResponse::Ok()
-                        .content_type("text/html; charset=utf-8")
-                        .body(body)
+                Some(p) => {
+                    HttpResponse::Ok().body(format!("{}", p.name()))
                 }
             }
         }

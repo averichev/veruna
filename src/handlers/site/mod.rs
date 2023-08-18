@@ -3,7 +3,7 @@ use actix_web::{HttpResponse, Responder};
 use actix_web::web::Data;
 use linq::iter::Enumerable;
 use serde::Serialize;
-use veruna_domain::sites::Site;
+use veruna_domain::sites::SiteTrait;
 use crate::AppState;
 
 pub(crate) async fn list(app: Data<AppState>) -> impl Responder {
@@ -27,7 +27,7 @@ struct SiteList {
 }
 
 impl SiteList {
-    fn new(list: Arc<Vec<Box<dyn Site>>>) -> SiteList {
+    fn new(list: Arc<Vec<Box<dyn SiteTrait>>>) -> SiteList {
         let items = list.iter()
             .select(|n| SiteListItem {
                 id: n.id(),
