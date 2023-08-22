@@ -1,3 +1,9 @@
+## [1.1.10](https://github.com/averichev/veruna/compare/v1.1.9...v1.1.10) (2023-08-22)
+
+### Code Refactoring
+
+- Find page by slug ([4d532ff](https://github.com/averichev/veruna/commit/4d532ff00ffdfbf3ee831d2a02a7973d388421b2))
+
 ## [1.1.9](https://github.com/averichev/veruna/compare/v1.1.8...v1.1.9) (2023-08-18)
 
 ### Chores
