@@ -41,7 +41,7 @@ impl PageList {
 struct PageListItem {
     id: String,
     name: String,
-    code: String,
+    code: Option<String>,
 }
 
 impl PageListItem {

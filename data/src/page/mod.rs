@@ -1,10 +1,7 @@
-use std::borrow::Cow;
-use std::fmt::format;
 use std::sync::Arc;
 use async_trait::async_trait;
 use linq::iter::Enumerable;
 use serde::{Deserialize, Serialize};
-use surrealdb::dbs::Auth::No;
 use surrealdb::engine::local::Db;
 use surrealdb::sql::Thing;
 use surrealdb::Surreal;
@@ -33,23 +30,29 @@ impl PageRepositoryTrait for PageRepository {
         Ok(Page::arcing(record))
     }
 
-    async fn read(&self, code: String, parent: Option<PageId>) -> Result<Option<Arc<dyn PageTrait>>, Arc<dyn DataErrorTrait>> {
-        let parent_value = match parent {
-            None => {
-                "null".to_string()
-            }
-            Some(n) => {
-                format!("'pages:{}'", n.value.to_string())
-            }
-        };
+    async fn read_without_parent(&self) -> Result<Option<Arc<dyn PageTrait>>, Arc<dyn DataErrorTrait>> {
         let mut response = self.connection
-            .query("LET $code = $code_value;")
-            .query(format!("LET $parent = {};", parent_value))
-            .query("SELECT * FROM pages WHERE code = $code AND parent = $parent")
-            .bind(("code_value", code))
+            .query("SELECT * FROM pages WHERE code = null AND parent = null")
             .await
             .unwrap();
-        let page: Option<PageEntity> = response.take(2).unwrap();
+        let page: Option<PageEntity> = response.take(0).unwrap();
+        match page {
+            None => {
+                Ok(None)
+            }
+            Some(entity) => {
+                Ok(Some(Page::arcing(entity)))
+            }
+        }
+    }
+
+    async fn read_by_parent(&self, code: String, parent: PageId) -> Result<Option<Arc<dyn PageTrait>>, Arc<dyn DataErrorTrait>> {
+        let parent_id =  format!("pages:{}", parent.value.to_string());
+        let mut response = self.connection
+            .query(format!("SELECT * FROM pages WHERE code = \"{}\" AND parent = \"{}\"", code, parent_id))
+            .await
+            .unwrap();
+        let page: Option<PageEntity> = response.take(0).unwrap();
         match page {
             None => {
                 Ok(None)
@@ -82,13 +85,13 @@ impl PageRepositoryTrait for PageRepository {
 struct PageEntity {
     #[serde(rename(deserialize = "id"))]
     thing: Thing,
-    code: String,
+    code: Option<String>,
     name: String,
 }
 
 #[derive(Serialize)]
 pub struct CreatePageQuery {
-    code: String,
+    code: Option<String>,
     name: String,
 }
 
@@ -99,7 +102,7 @@ impl CreatePageQuery {
 }
 
 struct Page {
-    code: String,
+    code: Option<String>,
     name: String,
     id: String,
 }
@@ -118,7 +121,7 @@ impl PageTrait for Page {
         self.name.clone()
     }
 
-    fn code(&self) -> String {
+    fn code(&self) -> Option<String> {
         self.code.clone()
     }
 

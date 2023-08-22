@@ -7,7 +7,8 @@ use crate::sites::SiteId;
 #[async_trait(? Send)]
 pub trait PageRepositoryTrait {
     async fn create(&self, page: Arc<dyn PageCreateTrait>) -> Result<Arc<dyn PageTrait>, Arc<dyn DataErrorTrait>>;
-    async fn read(&self, code: String, parent: Option<PageId>) -> Result<Option<Arc<dyn PageTrait>>, Arc<dyn DataErrorTrait>>;
+    async fn read_without_parent(&self) -> Result<Option<Arc<dyn PageTrait>>, Arc<dyn DataErrorTrait>>;
+    async fn read_by_parent(&self, code: String, parent: PageId) -> Result<Option<Arc<dyn PageTrait>>, Arc<dyn DataErrorTrait>>;
     async fn delete(&self, page_id: PageId) -> bool;
     async fn list(&self) -> Result<Arc<Vec<Box<dyn PageTrait>>>, Arc<dyn DataErrorTrait>>;
 }
@@ -38,11 +39,11 @@ impl PageKitTrait for PageKit {
 
     async fn read(&self, nodes: Vec<String>) -> Result<Option<Arc<dyn PageTrait>>, Arc<dyn DomainErrorTrait>> {
         if nodes.is_empty() {
-            let read = self.repository.lock().await.read(String::new(), None).await.unwrap();
+            let read = self.repository.lock().await.read_without_parent().await.unwrap();
             return Ok(read);
         }
         let mut pages: Vec<Arc<dyn PageTrait>> = vec![];
-        let main = self.repository.lock().await.read(String::new(), None).await.unwrap();
+        let main = self.repository.lock().await.read_without_parent().await.unwrap();
         match main {
             None => {
                 return Err(PageError::new("главная страница не найдена".to_string()));
@@ -54,8 +55,8 @@ impl PageKitTrait for PageKit {
         for (i, node) in nodes.iter().enumerate() {
             let index = i;
             let prev: &Arc<dyn PageTrait> = pages.get(index).unwrap();
-            let parent = Some(PageId { value: prev.id() });
-            let read = self.repository.lock().await.read(node.clone(), parent).await.unwrap();
+            let parent = PageId { value: prev.id() };
+            let read = self.repository.lock().await.read_by_parent(node.clone(), parent).await.unwrap();
 
             match read {
                 None => {
@@ -66,7 +67,8 @@ impl PageKitTrait for PageKit {
                 }
             }
         }
-        Ok(None)
+        let last_page = pages.last();
+        Ok(last_page.cloned())
     }
 
     async fn list(&self) -> Result<Arc<Vec<Box<dyn PageTrait>>>, Arc<dyn DomainErrorTrait>> {
@@ -77,12 +79,12 @@ impl PageKitTrait for PageKit {
 
 pub trait PageCreateTrait {
     fn name(&self) -> String;
-    fn code(&self) -> String;
+    fn code(&self) -> Option<String>;
 }
 
 pub trait PageTrait {
     fn name(&self) -> String;
-    fn code(&self) -> String;
+    fn code(&self) -> Option<String>;
     fn id(&self) -> String;
 }
 

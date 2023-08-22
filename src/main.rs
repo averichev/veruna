@@ -22,6 +22,7 @@ use actix_web::middleware::Logger;
 use actix_web::{
     dev::{Service, Transform}
 };
+use actix_web::http::header::ContentType;
 use actix_web_validator::JsonConfig;
 use dotenv;
 use veruna_data::Repositories;
@@ -75,10 +76,10 @@ async fn path_test(request: HttpRequest,
             let page = page_kit.read(nodes).await.unwrap();
             match page {
                 None => {
-                    HttpResponse::NotFound().body(format!("Page not found {}", request_parser.tail()))
+                    HttpResponse::NotFound().content_type(ContentType::html()).body(format!("Page not found {}", request_parser.tail()))
                 }
                 Some(p) => {
-                    HttpResponse::Ok().body(format!("{}", p.name()))
+                    HttpResponse::Ok().content_type(ContentType::html()).body(format!("{}", p.name()))
                 }
             }
         }
