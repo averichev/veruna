@@ -30,7 +30,7 @@ serde = "1.0.166"
 surrealdb = {version = "1.0.0-beta.9", features = ["kv-rocksdb"]}
 argon2 = "0.5.0"
 uuid7 = "0.6.4"
-termion = "2.0.1"
+termion = "3.0.0"
 regex = "1.9.0"
 actix-cors = "0.6.4"
 actix-web-validator = "5.0.1"
