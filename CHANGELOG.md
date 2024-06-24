@@ -1,3 +1,9 @@
+## [1.1.11](https://github.com/averichev/veruna/compare/v1.1.10...v1.1.11) (2024-06-24)
+
+### Chores
+
+- Commit ([8a834f0](https://github.com/averichev/veruna/commit/8a834f056e7ba2403af4c979fe8ac6886f8eca7e))
+
 ## [1.1.10](https://github.com/averichev/veruna/compare/v1.1.9...v1.1.10) (2023-08-22)
 
 ### Code Refactoring
